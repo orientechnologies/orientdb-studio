@@ -58,25 +58,94 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
 
     var sqlText = 'select * from oFunction order by name';
 
+	$scope.precompileFunction = function( f ) {
+		//console.log( "[precompileFunction]" );
+
+		if ( f.icedcoffeescript !== undefined ) {
+			//console.log( "[precompileFunction] parameters are " + JSON.stringify( f[ 'parameters' ] ) );
+			var scriptParamsPart = "(";
+			for ( var p in f[ 'parameters' ] ) {
+				if ( f[ 'parameters' ].hasOwnProperty( p ) ) {
+					scriptParamsPart += ( scriptParamsPart.length > 1 ? ", " : " " ) + f[ 'parameters' ][ p ];
+				}
+			}
+			scriptParamsPart += " )";
+
+			var script = "functionBody = " + scriptParamsPart + " -> \n"
+
+			var lines = f.icedcoffeescript.split( "\n" );
+			for ( var l in lines ) {
+				script += "\n\t" + lines[ l ];
+			}
+
+			//console.log( "[precompileFunction] Trying to  compile:\n" + script );
+
+			var compiledScript = "";
+			try {
+				compiledScript = CoffeeScript.compile( script );
+
+				compiledScript = compiledScript.slice( 13, -15 );
+				compiledScript += "\nreturn functionBody" + scriptParamsPart + ";";
+			}
+			catch (e) {
+				compiledScript = ' return "' + e + '";';
+			}
+
+			f.code = compiledScript;
+			//console.log( "[precompileFunction] Compiled script =\n" + compiledScript );
+		}
+		else if ( f.livescript !== undefined ) {
+			//console.log( "[precompileFunction] parameters are " + JSON.stringify( f[ 'parameters' ] ) );
+			var scriptParamsPart = "";
+			for ( var p in f[ 'parameters' ] ) {
+				if ( f[ 'parameters' ].hasOwnProperty( p ) ) {
+					scriptParamsPart += ( scriptParamsPart.length > 0 ? ", " : "(" ) + f[ 'parameters' ][ p ];
+				}
+			}
+			if ( scriptParamsPart.length > 0 )
+				scriptParamsPart += ")";
+
+			var script = "functionBody = " + scriptParamsPart + " --> \n"
+
+			var lines = f.livescript.split( "\n" );
+			for ( var l in lines ) {
+				script += "\n\t" + lines[ l ];
+			}
+
+			//console.log( "[precompileFunction] Trying to  compile:\n" + script );
+
+			var compiledScript = "";
+			try {
+				compiledScript = LiveScript.compile( script );
+
+				compiledScript = compiledScript.slice( 13, -15 );
+				compiledScript += "\nreturn functionBody" + ( scriptParamsPart.length > 0 ? scriptParamsPart : "()" ) + ";";
+			}
+			catch (e) {
+				compiledScript = ' return "' + e + '";';
+			}
+
+			f.code = compiledScript;
+			//console.log( "[precompileFunction] Compiled script =\n" + compiledScript );
+		}
+	}
+
+
 	$scope.fixFunctionToExecuteForPrecompiledLanguages = function() {
 		if ( $scope.functionToExecute ) {
-			var debugString = "";
 			var isPrecompiledLanguage = false;
 			for ( var precompiledLanguageName in $scope.precompiledLanguageToPropertyNameMapping ) {
 				if ( precompiledLanguageName !== $scope.functionToExecute[ 'language' ] ) {
 					if ( $scope.functionToExecute[ 'language' ] == 'Javascript' && $scope.functionToExecute[ $scope.precompiledLanguageToPropertyNameMapping[ precompiledLanguageName ] ] ) {
-						debugString += "Has property " + $scope.precompiledLanguageToPropertyNameMapping[ precompiledLanguageName ] + " so we will assume this is the language...\n";
 						isPrecompiledLanguage = true;
 						$scope.functionToExecute[ 'language' ] = precompiledLanguageName;
 					}
 					else {
 						delete( $scope.functionToExecute[ $scope.precompiledLanguageToPropertyNameMapping[ precompiledLanguageName ] ] );
-						debugString += "Deleting property " + $scope.precompiledLanguageToPropertyNameMapping[ precompiledLanguageName ] + "\n";
 					}
 				}
 				else {
 					isPrecompiledLanguage = true;
-					debugString += "language " + $scope.precompiledLanguageToPropertyNameMapping[ precompiledLanguageName ] + "\n";
 				}
 			}
 
@@ -85,20 +154,17 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
 				var propertyName = $scope.precompiledLanguageToPropertyNameMapping[ $scope.functionToExecute[ 'language' ] ];
 				if ( ! $scope.functionToExecute.hasOwnProperty( propertyName ) ) {
 					$scope.functionToExecute[ propertyName ] = "";
-					debugString += "Adding property " + propertyName + "\n";
 				}
 
 				//language should be javascript, NOT IcedCoffeeScript or LiveScript
-				debugString += "Resetting language from " + $scope.functionToExecute[ 'language' ] + " to Javascript..." + "\n";
 				$scope.functionToExecute[ 'language' ] = 'Javascript';
+
+				$scope.precompileFunction( $scope.functionToExecute );
 			}
-
-			console.log( debugString );
-
 		}
-		else {
-			console.log( "Not fixing functionToExecute, because it is not defined..." );
-		}
+//		else {
+//			console.log( "Not fixing functionToExecute, because it is not defined..." );
+//		}
 
 	}
 
@@ -285,7 +351,10 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
     $scope.saveFunction = function () {
         $scope.resultExecute = '';
         if ($scope.functionToExecute['language'] != undefined && $scope.functionToExecute['name'] != undefined && $scope.functionToExecute['name'] != '') {
-            if ($scope.isNewFunction == true) {
+
+	        $scope.fixFunctionToExecuteForPrecompiledLanguages();
+
+	        if ($scope.isNewFunction == true) {
 
                 DocumentApi.createDocument($scope.database.getName(), $scope.functionToExecute['@rid'], $scope.functionToExecute, function (data) {
                         $scope.getListFunction();
