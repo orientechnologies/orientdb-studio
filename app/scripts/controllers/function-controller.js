@@ -15,22 +15,52 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
             }
         },
         onLoad: function (_cm) {
+	        //store the codemirror instance in the scope, so we can manipulate it later on if required ( for instance hiding it with $scope.codemirrorCode.getWrapperElement().style.display = 'none' )
             $scope.vcm = _cm;
+	        $scope.codemirrorCode = _cm;
             $scope.createNewFunction();
         }
     };
-	$scope.icedcoffeescriptEditorOptions = $scope.editorOptions;
-	$scope.icedcoffeescriptEditorOptions.mode = 'coffeescript';
-	delete( $scope.icedcoffeescriptEditorOptions.onLoad );
 
-	$scope.livescriptEditorOptions = $scope.editorOptions;
-	$scope.livescriptEditorOptions.mode = 'livescript';
-	delete( $scope.livescriptEditorOptions.onLoad );
+	$scope.icedcoffeescriptEditorOptions = {
+		lineWrapping: true,
+		lineNumbers: true,
+		readOnly: false,
+		mode: 'javascript', //'coffeescript' doesn't seem to do any code highligting?
+		extraKeys: {
+			"Ctrl-Enter": function (instance) {
+				$scope.executeFunction();
+
+			}
+		},
+		onLoad: function (_cm) {
+			//store the codemirror instance in the scope, so we can manipulate it later on if required ( for instance hiding it with $scope.codemirrorIcedCoffeeScript.getWrapperElement().style.display = 'none' )
+			$scope.codemirrorIcedCoffeeScript = _cm;
+		}
+	};
+
+	$scope.livescriptEditorOptions = {
+		lineWrapping: true,
+		lineNumbers: true,
+		readOnly: false,
+		mode: 'javascript', //'livescript' doesn't seem to do any code highligting?
+		extraKeys: {
+			"Ctrl-Enter": function (instance) {
+				$scope.executeFunction();
+
+			}
+		},
+		onLoad: function (_cm) {
+			//store the codemirror instance in the scope, so we can manipulate it later on if required ( for instance hiding it with $scope.codemirrorLiveScript.getWrapperElement().style.display = 'none' )
+			$scope.codemirrorLiveScript = _cm;
+        }
+	};
 
 
 	Database.setWiki("https://github.com/orientechnologies/orientdb-studio/wiki/Functions");
     $scope.functions = new Array;
 
+	// You can easily disable support for the 'extra' script languages here
 	$scope.enableIcedCoffeeScript = true;
 	$scope.enableLiveScript = true;
 
@@ -61,7 +91,7 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
 	$scope.precompileFunction = function( f ) {
 		//console.log( "[precompileFunction]" );
 
-		if ( f.icedcoffeescript !== undefined ) {
+		if (f.icedcoffeescript !== undefined ) {
 			//console.log( "[precompileFunction] parameters are " + JSON.stringify( f[ 'parameters' ] ) );
 			var scriptParamsPart = "(";
 			for ( var p in f[ 'parameters' ] ) {
@@ -168,7 +198,38 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
 
 	}
 
-    $scope.getListFunction = function () {
+
+	/**
+	 * When functionToExecute changes, make sure all the right comdemirror editors are visible and hidden
+	 */
+	$scope.$watch( 'functionToExecute', function ( f2Exec ) {
+		//console.log( "selectedFunction has changed ! " + JSON.stringify( data ) );
+
+		var codeVisible = true;
+		var coffeescriptVisible = false;
+		var livescriptVisible = false;
+
+		//BY DEFAULT 'CODE' is visible, show a different editor in some cases (compile-to-JS languages)
+		if ( $scope.functionToExecute.language == 'Javascript' ) {
+			if ( $scope.enableIcedCoffeeScript && $scope.functionToExecute.hasOwnProperty( 'icedcoffeescript' ) ) {
+				codeVisible = false;
+				coffeescriptVisible = true;
+				livescriptVisible = false;
+			}
+			else if ( $scope.enableLiveScript && $scope.functionToExecute.hasOwnProperty( 'livescript' ) ) {
+				codeVisible = false;
+				coffeescriptVisible = false;
+				livescriptVisible = true;
+			}
+		}
+
+		$scope.codemirrorCode.getWrapperElement().style.display = codeVisible ? "block" : "none";
+		$scope.codemirrorIcedCoffeeScript.getWrapperElement().style.display = coffeescriptVisible ? "block" : "none";
+		$scope.codemirrorLiveScript.getWrapperElement().style.display = livescriptVisible ? "block" : "none";
+	} );
+
+
+	$scope.getListFunction = function () {
         $scope.functions = new Array;
         $scope.functionsrid = new Array;
         CommandApi.queryText({database: $routeParams.database, language: 'sql', verbose: false, text: sqlText, limit: $scope.limit, shallow: false}, function (data) {

@@ -73,9 +73,25 @@
 
                         <div class="row-fluid">
                             <form ng-submit="query()" class="form-inline">
-                                <div ui-codemirror="editorOptions" ng-model="functionToExecute['code']" ng-hide="functionToExecute.hasOwnProperty( 'icedcoffeescript' ) || functionToExecute.hasOwnProperty( 'livescript' )"></div>
-	                            <div ui-codemirror="icedcoffeescriptEditorOptions" ng-model="functionToExecute[ 'icedcoffeescript' ]" ng-show="enableIcedCoffeeScript && functionToExecute.hasOwnProperty( 'icedcoffeescript' )"></div>
-	                            <div ui-codemirror="livescriptEditorOptions" ng-model="functionToExecute[ 'livescript' ]" ng-show="enableLiveScript && functionToExecute.hasOwnProperty( 'livescript' )"></div>
+	                            <!-- ng-hide doesn't work well, we see the code from the prviously selected function sometimes when it was hidden before -->
+
+	                            <!-- ng-hide="functionToExecute.hasOwnProperty( 'icedcoffeescript' ) || functionToExecute.hasOwnProperty( 'livescript' )" -->
+	                            <!--<div style="overflow: 'hidden'; height: {{ functionToExecute.hasOwnProperty( 'icedcoffeescript' ) || functionToExecute.hasOwnProperty( 'livescript' ) ? '0px' : '200px' }}">
+	                            </div>-->
+		                        <div ui-codemirror="editorOptions" ng-model="functionToExecute['code']"></div>
+
+	                            <!--
+	                            <!- - ng-hide=" ! ( enableIcedCoffeeScript && functionToExecute.hasOwnProperty( 'icedcoffeescript' ) )" - ->
+	                            <div style="overflow: 'hidden'; height: {{ ! ( enableIcedCoffeeScript && functionToExecute.hasOwnProperty( 'icedcoffeescript' ) ) ? '0px' : '200px' }}">
+		                        </div>
+		                        -->
+	                            <!-- style="display: {{ enableIcedCoffeeScript && functionToExecute.hasOwnProperty( 'icedcoffeescript' ) ? 'block' : 'none' }}" -->
+	                            <!-- <div style="background-color: 'red'; position: 'relative'"></div> -->
+	                            <div ui-codemirror="icedcoffeescriptEditorOptions" ng-model="functionToExecute[ 'icedcoffeescript' ]"></div>
+
+	                            <!-- ng-hide="! ( enableLiveScript && functionToExecute.hasOwnProperty( 'livescript' ) )" -->
+	                            <!-- style="display: {{ enableLiveScript && functionToExecute.hasOwnProperty( 'livescript' ) ? 'block' : 'none' }}" -->
+	                            <div ui-codemirror="livescriptEditorOptions" ng-model="functionToExecute[ 'livescript' ]" ></div>
                             </form>
                         </div>
                         <div class="row-fluid">
