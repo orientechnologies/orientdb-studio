@@ -15,17 +15,69 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
             }
         },
         onLoad: function (_cm) {
+	        //store the codemirror instance in the scope, so we can manipulate it later on if required ( for instance hiding it with $scope.codemirrorCode.getWrapperElement().style.display = 'none' )
             $scope.vcm = _cm;
+	        $scope.codemirrorCode = _cm;
             $scope.createNewFunction();
         }
     };
-    Database.setWiki("https://github.com/orientechnologies/orientdb-studio/wiki/Functions");
+
+	$scope.icedcoffeescriptEditorOptions = {
+		lineWrapping: true,
+		lineNumbers: true,
+		readOnly: false,
+		mode: 'javascript', //'coffeescript' doesn't seem to do any code highligting?
+		extraKeys: {
+			"Ctrl-Enter": function (instance) {
+				$scope.executeFunction();
+
+			}
+		},
+		onLoad: function (_cm) {
+			//store the codemirror instance in the scope, so we can manipulate it later on if required ( for instance hiding it with $scope.codemirrorIcedCoffeeScript.getWrapperElement().style.display = 'none' )
+			$scope.codemirrorIcedCoffeeScript = _cm;
+		}
+	};
+
+	$scope.livescriptEditorOptions = {
+		lineWrapping: true,
+		lineNumbers: true,
+		readOnly: false,
+		mode: 'javascript', //'livescript' doesn't seem to do any code highligting?
+		extraKeys: {
+			"Ctrl-Enter": function (instance) {
+				$scope.executeFunction();
+
+			}
+		},
+		onLoad: function (_cm) {
+			//store the codemirror instance in the scope, so we can manipulate it later on if required ( for instance hiding it with $scope.codemirrorLiveScript.getWrapperElement().style.display = 'none' )
+			$scope.codemirrorLiveScript = _cm;
+        }
+	};
+
+
+	Database.setWiki("https://github.com/orientechnologies/orientdb-studio/wiki/Functions");
     $scope.functions = new Array;
+
+	// You can easily disable support for the 'extra' script languages here
+	$scope.enableIcedCoffeeScript = true;
+	$scope.enableLiveScript = true;
 
     $scope.consoleValue = '';                           //code of the function
     $scope.nameFunction = '';                           //name of the function
     $scope.selectedLanguage = '';                       //language of the function
-    $scope.languages = ['SQL', 'Javascript'];
+    $scope.languages = [ 'SQL', 'Javascript' ];
+	$scope.precompiledLanguageToPropertyNameMapping = {};
+	if ( $scope.enableIcedCoffeeScript ) {
+		$scope.languages.push( 'IcedCoffeeScript' );
+		$scope.precompiledLanguageToPropertyNameMapping[ 'IcedCoffeeScript' ] = 'icedcoffeescript';
+	}
+	if ( $scope.enableLiveScript ) {
+		$scope.languages.push( 'LiveScript' );
+		$scope.precompiledLanguageToPropertyNameMapping[ 'LiveScript' ] = 'livescript';
+	}
+
     $scope.functionToExecute = undefined;
 
     $scope.resultExecute = undefined;
@@ -36,8 +88,148 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
 
     var sqlText = 'select * from oFunction order by name';
 
+	$scope.precompileFunction = function( f ) {
+		//console.log( "[precompileFunction]" );
 
-    $scope.getListFunction = function () {
+		if (f.icedcoffeescript !== undefined ) {
+			//console.log( "[precompileFunction] parameters are " + JSON.stringify( f[ 'parameters' ] ) );
+			var scriptParamsPart = "(";
+			for ( var p in f[ 'parameters' ] ) {
+				if ( f[ 'parameters' ].hasOwnProperty( p ) ) {
+					scriptParamsPart += ( scriptParamsPart.length > 1 ? ", " : " " ) + f[ 'parameters' ][ p ];
+				}
+			}
+			scriptParamsPart += " )";
+
+			var script = "functionBody = " + scriptParamsPart + " -> \n"
+
+			var lines = f.icedcoffeescript.split( "\n" );
+			for ( var l in lines ) {
+				script += "\n\t" + lines[ l ];
+			}
+
+			//console.log( "[precompileFunction] Trying to  compile:\n" + script );
+
+			var compiledScript = "";
+			try {
+				compiledScript = CoffeeScript.compile( script );
+
+				compiledScript = compiledScript.slice( 13, -15 );
+				compiledScript += "\nreturn functionBody" + scriptParamsPart + ";";
+			}
+			catch (e) {
+				compiledScript = ' return "' + e + '";';
+			}
+
+			f.code = compiledScript;
+			//console.log( "[precompileFunction] Compiled script =\n" + compiledScript );
+		}
+		else if ( f.livescript !== undefined ) {
+			//console.log( "[precompileFunction] parameters are " + JSON.stringify( f[ 'parameters' ] ) );
+			var scriptParamsPart = "";
+			for ( var p in f[ 'parameters' ] ) {
+				if ( f[ 'parameters' ].hasOwnProperty( p ) ) {
+					scriptParamsPart += ( scriptParamsPart.length > 0 ? ", " : "(" ) + f[ 'parameters' ][ p ];
+				}
+			}
+			if ( scriptParamsPart.length > 0 )
+				scriptParamsPart += ")";
+
+			var script = "functionBody = " + scriptParamsPart + " --> \n"
+
+			var lines = f.livescript.split( "\n" );
+			for ( var l in lines ) {
+				script += "\n\t" + lines[ l ];
+			}
+
+			//console.log( "[precompileFunction] Trying to  compile:\n" + script );
+
+			var compiledScript = "";
+			try {
+				compiledScript = LiveScript.compile( script );
+
+				compiledScript = compiledScript.slice( 13, -15 );
+				compiledScript += "\nreturn functionBody" + ( scriptParamsPart.length > 0 ? scriptParamsPart : "()" ) + ";";
+			}
+			catch (e) {
+				compiledScript = ' return "' + e + '";';
+			}
+
+			f.code = compiledScript;
+			//console.log( "[precompileFunction] Compiled script =\n" + compiledScript );
+		}
+	}
+
+
+	$scope.fixFunctionToExecuteForPrecompiledLanguages = function() {
+		if ( $scope.functionToExecute ) {
+			var isPrecompiledLanguage = false;
+			for ( var precompiledLanguageName in $scope.precompiledLanguageToPropertyNameMapping ) {
+				if ( precompiledLanguageName !== $scope.functionToExecute[ 'language' ] ) {
+					if ( $scope.functionToExecute[ 'language' ] == 'Javascript' && $scope.functionToExecute[ $scope.precompiledLanguageToPropertyNameMapping[ precompiledLanguageName ] ] ) {
+						isPrecompiledLanguage = true;
+						$scope.functionToExecute[ 'language' ] = precompiledLanguageName;
+					}
+					else {
+						delete( $scope.functionToExecute[ $scope.precompiledLanguageToPropertyNameMapping[ precompiledLanguageName ] ] );
+					}
+				}
+				else {
+					isPrecompiledLanguage = true;
+				}
+			}
+
+			if ( isPrecompiledLanguage ) {
+				//make sure it has the right property
+				var propertyName = $scope.precompiledLanguageToPropertyNameMapping[ $scope.functionToExecute[ 'language' ] ];
+				if ( ! $scope.functionToExecute.hasOwnProperty( propertyName ) ) {
+					$scope.functionToExecute[ propertyName ] = "";
+				}
+
+				//language should be javascript, NOT IcedCoffeeScript or LiveScript
+				$scope.functionToExecute[ 'language' ] = 'Javascript';
+
+				$scope.precompileFunction( $scope.functionToExecute );
+			}
+		}
+//		else {
+//			console.log( "Not fixing functionToExecute, because it is not defined..." );
+//		}
+
+	}
+
+
+	/**
+	 * When functionToExecute changes, make sure all the right comdemirror editors are visible and hidden
+	 */
+	$scope.$watch( 'functionToExecute', function ( f2Exec ) {
+		//console.log( "selectedFunction has changed ! " + JSON.stringify( data ) );
+
+		var codeVisible = true;
+		var coffeescriptVisible = false;
+		var livescriptVisible = false;
+
+		//BY DEFAULT 'CODE' is visible, show a different editor in some cases (compile-to-JS languages)
+		if ( $scope.functionToExecute.language == 'Javascript' ) {
+			if ( $scope.enableIcedCoffeeScript && $scope.functionToExecute.hasOwnProperty( 'icedcoffeescript' ) ) {
+				codeVisible = false;
+				coffeescriptVisible = true;
+				livescriptVisible = false;
+			}
+			else if ( $scope.enableLiveScript && $scope.functionToExecute.hasOwnProperty( 'livescript' ) ) {
+				codeVisible = false;
+				coffeescriptVisible = false;
+				livescriptVisible = true;
+			}
+		}
+
+		$scope.codemirrorCode.getWrapperElement().style.display = codeVisible ? "block" : "none";
+		$scope.codemirrorIcedCoffeeScript.getWrapperElement().style.display = coffeescriptVisible ? "block" : "none";
+		$scope.codemirrorLiveScript.getWrapperElement().style.display = livescriptVisible ? "block" : "none";
+	} );
+
+
+	$scope.getListFunction = function () {
         $scope.functions = new Array;
         $scope.functionsrid = new Array;
         CommandApi.queryText({database: $routeParams.database, language: 'sql', verbose: false, text: sqlText, limit: $scope.limit, shallow: false}, function (data) {
@@ -58,6 +250,8 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
     }
     $scope.clearConsole = function () {
         $scope.functionToExecute['code'] = '';
+
+	    $scope.fixFunctionToExecuteForPrecompiledLanguages();
     }
     $scope.getListFunction();
 
@@ -77,7 +271,15 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
 
             var newFunc = JSON.parse(JSON.stringify($scope.functionToExecute));
             newFunc['name'] = $scope.functionToExecute['name'] + "_clone";
-            newFunc['code'] = newFunc['code'] + ' '
+            newFunc['code'] = newFunc['code'] + ' ';
+	        if ( $scope.enableIcedCoffeeScript && $scope.functionToExecute.hasOwnProperty( 'icedcoffeescript' ) ) {
+		        newFunc['icedcoffeescript'] = newFunc['icedcoffeescript'] + ' ';
+	        }
+	        if ( $scope.enableliveScript && $scope.functionToExecute.hasOwnProperty( 'livescript' ) ) {
+		        newFunc['livescript'] = newFunc['livescript'] + ' ';
+	        }
+	        $scope.fixFunctionToExecuteForPrecompiledLanguages();
+
             newFunc['$$hashKey'] = '';
 
             $scope.functions.push(newFunc);
@@ -161,10 +363,20 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
         $scope.consoleValue = selectedFunction['code'];
         $scope.nameFunction = selectedFunction['name'];
         $scope.selectedLanguage = selectedFunction['language'];
+	    if ( $scope.enableIcedCoffeeScript && selectedFunction.hasOwnProperty( 'icedcoffeescript' ) ) {
+		    $scope.selectedLanguage = 'IcedCoffeeScript';
+		    $scope.consoleValue = selectedFunction[ 'icedcoffeescript' ];
+	    }
+		else if ( $scope.enableLiveScript && selectedFunction.hasOwnProperty( 'livescript' ) ) {
+		    $scope.selectedLanguage = 'LiveScript';
+		    $scope.consoleValue = selectedFunction[ 'livescript' ];
+	    }
+
         $scope.functionToExecute = selectedFunction;
         $scope.inParams = $scope.functionToExecute['parameters'];
         //$scope.vcm.setValue($scope.consoleValue != null ? $scope.consoleValue : "");
 
+	    $scope.fixFunctionToExecuteForPrecompiledLanguages();
     }
 
     $scope.showInConsole = function (selectedFunction) {
@@ -187,6 +399,8 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
 
     $scope.modifiedLanguage = function (lang) {
         $scope.functionToExecute['language'] = lang;
+	    $scope.fixFunctionToExecuteForPrecompiledLanguages();
+
     }
     $scope.createNewFunction = function () {
 
@@ -198,7 +412,10 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
     $scope.saveFunction = function () {
         $scope.resultExecute = '';
         if ($scope.functionToExecute['language'] != undefined && $scope.functionToExecute['name'] != undefined && $scope.functionToExecute['name'] != '') {
-            if ($scope.isNewFunction == true) {
+
+	        $scope.fixFunctionToExecuteForPrecompiledLanguages();
+
+	        if ($scope.isNewFunction == true) {
 
                 DocumentApi.createDocument($scope.database.getName(), $scope.functionToExecute['@rid'], $scope.functionToExecute, function (data) {
                         $scope.getListFunction();
