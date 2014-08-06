@@ -120,6 +120,11 @@ App.config(function ($routeProvider) {
             controller: 'GraphController',
             resolve: DatabaseResolve
         })
+        .when('/database/:database/apps', {
+            templateUrl: 'views/database/apps/apps.html',
+            controller: 'GraphController',
+            resolve: DatabaseResolve
+        })
         .when('/server', {
             templateUrl: 'views/server/info.html',
             controller: 'ServerController'

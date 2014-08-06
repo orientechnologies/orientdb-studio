@@ -265,3 +265,19 @@ text.vicon {
 .btn {
     border-radius: 0;
 }
+.app-iframe {
+    width: auto;
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    border: none;
+}
+.container-studio .container-fluid {
+    padding: 0px;
+}
+div.container-studio {
+    padding-top: 5px !important;
+}
+html, body {
+    height:100%;
+}

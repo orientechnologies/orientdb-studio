@@ -1,0 +1,47 @@
+
+
+.preview-container {
+    width: 400px;
+    height: 550px;
+    display: block;
+    margin: 0 auto;
+    margin-top: 50px;
+}
+.preview-body {
+    position: absolute;
+    height: 400px;
+    width: 275px;
+    background-color: white;
+    background-position: center;
+    margin: 0 auto;
+    top: 70px;
+    left: 63px;
+    display: block;
+}
+.preview {
+    position: relative;
+    background: url("../img/phone-case@2x.png") no-repeat;
+    background-size: 310px 100%;
+    background-position: center;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    margin: 0 auto;
+    display: block;
+
+}
+
+body {
+    height: 100%;
+    width: 100%;
+    background: url('../img/builder_bg_texture_tile.png') repeat transparent;
+}
+.container-builder {
+
+}
+.components {
+
+}
+html, body {
+    height:100%;
+}

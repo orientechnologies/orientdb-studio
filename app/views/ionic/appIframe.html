@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Todo</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+
+    <link href="../../components/ionic/release/css/ionic.css" rel="stylesheet">
+    <link href="../../components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+    <link href="../../styles/ionic-builder.css" rel="stylesheet">
+
+    <script src="../../components/jquery/dist/jquery.js"></script>
+    <script src="../../components/ionic/release/js/ionic.bundle.js"></script>
+    <script src="../../components/ngDraggable/ngDraggable.js"></script>
+
+
+    <script src="../../scripts/ionic/builder.js"></script>
+
+</head>
+<body ng-app="builder">
+
+<div class="container-fluid container-builder">
+    <div class="row">
+        <div class="col-md-3 components">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Pages
+                </div>
+                <div class="panel-body">
+
+                </div>
+            </div>
+            <div class="panel panel-default" ng-controller="AppComponentsController">
+                <div class="panel-heading">
+                    Components
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a href="" ng-drag="true" ng-drag-data="header">Header</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="preview-container">
+                <div class="preview">
+
+                    <div class="preview-body" app-builder ng-drop="true" ng-drop-success="onDropComplete($data,$event,$element)"
+                         ng-controller="AppBuilderController">
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 components">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="panel-title">
+
+                    </div>
+                </div>
+                <div class="panel-body">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
