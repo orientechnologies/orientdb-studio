@@ -1,5 +1,4 @@
 
-
 .preview-container {
     width: 400px;
     height: 550px;
@@ -7,6 +6,7 @@
     margin: 0 auto;
     margin-top: 50px;
 }
+
 .preview-body {
     position: absolute;
     height: 400px;
@@ -18,6 +18,7 @@
     left: 63px;
     display: block;
 }
+
 .preview {
     position: relative;
     background: url("../img/phone-case@2x.png") no-repeat;
@@ -36,12 +37,65 @@ body {
     width: 100%;
     background: url('../img/builder_bg_texture_tile.png') repeat transparent;
 }
+
 .container-builder {
 
 }
+
 .components {
 
 }
+
 html, body {
-    height:100%;
+    height: 100%;
+}
+
+.actions-container {
+    position: relative;
+    margin: 0 auto;
+    top: 70px;
+    left: 63px;
+    display: block;
+}
+
+.actions {
+    font-family: FontAwesome;
+    position: absolute;
+    height: 20px;
+    background-color: #d3d3d3;
+    width: 40px;
+    text-align: center;
+    z-index: 1000;
+}
+
+.container-builder {
+    padding: 0px;
+}
+
+.container-builder .row {
+    margin: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.container-builder .row .col-md-3 {
+    padding: 0px;
+}
+
+.container-builder .row .col-md-6 {
+    padding: 0px;
+}
+
+.widget-view {
+    width: 100%;
+    height: 100%;
+}
+
+div.widget-container > *:hover {
+    /*border: 1px solid red;*/
+}
+
+.container-builder .content {
+    width: 100%;
+    height: 100%;
 }

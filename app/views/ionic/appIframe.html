@@ -5,12 +5,16 @@
     <title>Todo</title>
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
 
-    <link href="../../components/ionic/release/css/ionic.css" rel="stylesheet">
     <link href="../../components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+    <link href="../../components/ionic/release/css/ionic.css" rel="stylesheet">
+    <link href="../../components/font-awesome/css/font-awesome.css" rel="stylesheet">
     <link href="../../styles/ionic-builder.css" rel="stylesheet">
 
     <script src="../../components/jquery/dist/jquery.js"></script>
+    <script src="../../components/jquery-ui/jquery-ui.js"></script>
+
     <script src="../../components/ionic/release/js/ionic.bundle.js"></script>
+    <script src="../../components/angular-local-storage/angular-local-storage.js"></script>
     <script src="../../components/ngDraggable/ngDraggable.js"></script>
 
 
@@ -34,10 +38,11 @@
                 <div class="panel-heading">
                     Components
                 </div>
-                <div class="panel-body">
+                <div class="panel-body container-fluid">
+
                     <div class="row">
-                        <div class="col-md-4">
-                            <a href="" ng-drag="true" ng-drag-data="header">Header</a>
+                        <div class="col-md-3" ng-repeat="(key, value) in components">
+                            <a href="" draggable drag-data="components[key]">{{components[key].type}}</a>
                         </div>
                     </div>
                 </div>
@@ -45,24 +50,36 @@
         </div>
         <div class="col-md-6">
             <div class="preview-container">
-                <div class="preview">
+                <div class="preview" ng-controller="AppBuilderController">
 
-                    <div class="preview-body" app-builder ng-drop="true" ng-drop-success="onDropComplete($data,$event,$element)"
-                         ng-controller="AppBuilderController">
+                    <button class="btn btn-primary" ng-click="save()">
+                        <i class="fa fa-save"></i>
+                    </button>
+                    <button class="btn btn-primary" ng-click="clear()">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+                    <div id="appContainer" class="preview-body" app-builder droppable
+                         drop-success="onDropComplete($data,$event,$element)">
 
-
+                    </div>
+                    <div class="actions-container" ng-style="{ 'left' : left, 'top' : top }"
+                         ng-class="{ 'hide' : !selected}">
+                        <div class="actions">
+                            <i class="fa fa-arrows"></i>
+                            <i class="fa fa-times-circle-o" ng-click="remove()"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 components">
+        <div class="col-md-3 components" ng-controller="AppComponentDetailsController">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <div class="panel-title">
-
+                        {{config.type}}
                     </div>
                 </div>
-                <div class="panel-body">
+                <div class="panel-body" component-builder>
 
                 </div>
             </div>
