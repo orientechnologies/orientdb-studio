@@ -1,5 +1,7 @@
-<ul class="list">
-    <li class="item">
-        Item Foo
-    </li>
-</ul>
+<ion-content id="{{config.id}}" class="has-header" droppable drop-success="onDropComplete($data,$event,$element)">
+    <ion-list ng-controller="ListController">
+        <ion-item ng-repeat="d in data">
+            {{ getValue(d) }}
+        </ion-item>
+    </ion-list>
+</ion-content>

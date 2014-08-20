@@ -1,0 +1,13 @@
+<form role="form" ng-controller="CardDetailsController">
+    <div class="form-group">
+        <label for="inputTitle" class="control-label">Title</label>
+        <input type="text" ng-model="config.title" class="form-control" id="inputTitle" placeholder="Title">
+    </div>
+    <div class="form-group" ng-show="config.source.type == 'SQL'">
+        <label for="inputQuery" class="control-label">Data</label>
+        <textarea id="inputQuery" ng-model="config.source.value"></textarea>
+    </div>
+    <div class="form-group" ui-codemirror="editorOptions" ng-model="config.tplEdit">
+
+    </div>
+</form>

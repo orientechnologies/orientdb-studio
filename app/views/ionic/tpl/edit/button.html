@@ -1,0 +1,19 @@
+<form role="form" ng-controller="ButtonDetailsController">
+    <div class="form-group">
+        <label for="inputTitle" class="control-label">Title</label>
+        <input type="text" ng-model="config.title" class="form-control" id="inputTitle" placeholder="Title">
+    </div>
+    <div class="form-group">
+        <label for="inputLink" class="control-label">Link</label>
+        <input type="text" ng-model="config.link" class="form-control" id="inputLink" placeholder="Link">
+    </div>
+    <div class="form-group">
+        <label for="inputClazz" class="control-label">Class</label>
+        <select id="inputClazz" class="form-control" ng-model="config.clazz"
+                ng-options="clazz for clazz in classes"></select>
+
+    </div>
+    <div class="form-group" ui-codemirror="editorOptions" ng-model="config.tplEdit">
+
+    </div>
+</form>

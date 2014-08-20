@@ -1,0 +1,22 @@
+<form role="form" ng-controller="ListDetailsController">
+    <div class="form-group">
+        <label for="inputClazz" class="control-label">Source</label>
+        <select id="inputClazz" class="form-control" ng-model="config.source.type"
+                ng-options="source for source in sources"></select>
+    </div>
+    <div class="form-group" ng-show="config.source.type == 'Array'">
+        <label for="inputArray" class="control-label">Source</label>
+        <ul id="inputArray">
+            <li ng-repeat="s in config.source.data">
+                <input ng-model="config.source.data[$index]">
+            </li>
+        </ul>
+    </div>
+    <div class="form-group" ng-show="config.source.type == 'SQL'">
+        <label for="inputQuery" class="control-label">Data</label>
+        <textarea id="inputQuery" ng-model="config.source.value"></textarea>
+    </div>
+    <div class="form-group" ui-codemirror="editorOptions" ng-model="config.tplEdit">
+
+    </div>
+</form>

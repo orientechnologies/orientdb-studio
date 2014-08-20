@@ -4,7 +4,7 @@
     height: 550px;
     display: block;
     margin: 0 auto;
-    margin-top: 50px;
+    margin-top: 20px;
 }
 
 .preview-body {
@@ -30,6 +30,16 @@
     margin: 0 auto;
     display: block;
 
+}
+
+.app-preview {
+    background-color: white;
+    background-position: center;
+    margin: 0 auto;
+    top: 70px;
+    position: absolute;
+    left: 63px;
+    display: block;
 }
 
 body {

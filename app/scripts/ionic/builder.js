@@ -1,17 +1,58 @@
-var builder = angular.module('builder', ['ionic', 'ngDraggable', 'LocalStorageModule'])
+var builder = angular.module('builder', ['ionic', 'ngDraggable', 'LocalStorageModule', 'ionicWidget', 'mgcrea.ngStrap', 'ui.codemirror', 'ngRoute'])
 
 
-builder.controller("AppBuilderController", function ($scope, $rootScope, $timeout, $q, localStorageService) {
+builder.config(function ($provide, $stateProvider, $urlRouterProvider) {
+    $provide.factory('$stateProvider', function () {
+        return $stateProvider;
+    });
+});
 
+builder.run(function ($stateProvider, localStorageService) {
+
+    var app = localStorageService.get("app");
+    if (app && app.pages) {
+        var pages = Object.keys(app.pages);
+        pages.forEach(function (e) {
+
+        });
+    }
+
+})
+builder.controller("AppBuilderController", function ($scope, $rootScope, $timeout, $q, localStorageService, $window, OrientDB) {
+
+    $scope.preview = false;
 
     $scope.save = function () {
-        console.log($scope.config)
-        localStorageService.set("app", $scope.config);
+
+        OrientDB.setApp($scope.app).then(function (data) {
+            $scope.app = data;
+        })
+    }
+    $scope.preview = function () {
+        var obj = $window.open('/dist/index.html?app=' + $scope.app.name, 'preview', 'width=300, height=400');
+
+    }
+    $scope.initIFrame = function () {
+
+
+        document.getElementById('appBuilderFrame').contentWindow.OApp = {};
+        document.getElementById('appBuilderFrame').contentWindow.OApp.url = OApp.url;
+        document.getElementById('appBuilderFrame').contentWindow.OApp.db = OApp.db;
     }
     $scope.clear = function () {
-        $scope.config.children = [];
+        $scope.app.pages = {
+            'home': {
+                type: "Page",
+                url: "#/home",
+                config: {
+                    name: "Container",
+                    children: []
+                }
+            }
+        };
         $scope.save();
     }
+
     $scope.onDropComplete = function (data, event, element) {
         var cloned = angular.extend({}, data);
         cloned.id = guidGenerator();
@@ -24,39 +65,98 @@ builder.controller("AppBuilderController", function ($scope, $rootScope, $timeou
         $scope.top = (70 + event.offsetY) + 'px';
     })
 
+    $rootScope.$on("page-add", function (msg, page) {
+
+        $scope.app.pages[page] = {
+            type: "Page",
+            url: "#/" + page,
+            config: {
+                name: "Container",
+                children: []
+            }
+        }
+        $scope.config = $scope.app.pages[page].config;
+        $rootScope.$broadcast("page-clear");
+    })
+    $rootScope.$on("page-selected", function (msg, page) {
+
+        $scope.config = $scope.app.pages[page].config;
+        $rootScope.$broadcast("page-clear");
+        initCanvas();
+        $rootScope.$broadcast("element-edit", $scope.app.pages[page], msg);
+    })
     $scope.remove = function () {
         var elemScope = angular.element($scope.selected.target).scope();
-        var pConfig = elemScope.$parent.$parent.config;
-        var idx = pConfig.children.indexOf(elemScope.$parent.config);
+        var pConfig = elemScope.$parent.config;
+        var idx = pConfig.children.indexOf(elemScope.config);
         pConfig.children.splice(idx, 1);
         angular.element($scope.selected.target).parent().remove()
     }
-    $scope.appName = 'Prova';
 
     $scope.getConfigParent = function (elem) {
         var elemScope = angular.element(elem).scope();
         return elemScope.config;
     }
-    $scope.config = localStorageService.get("app");
-    if (!$scope.config) {
-        $scope.config = {
-            name: "Container",
-            children: []
-        }
-    } else {
-        $timeout(function () {
-            var elem = angular.element('#appContainer');
-            $scope.config.children.forEach(function (e) {
-                $scope.$broadcast("element-add", e, elem, false);
-            })
-        }, 1000);
+    $timeout(function () {
+        OrientDB.getApp().then(function (app) {
+            $scope.app = app;
+            appReady();
+            initApp();
+        })
+    }, 1000)
 
+    $scope.appPreview = "/dist/index.html";
+    function initApp() {
+        if (!$scope.app) {
+            $scope.app = {
+                name: 'test',
+                pages: {
+                    'home': {
+                        type: "Page",
+                        url: "#/home",
+                        config: {
+                            name: "Container",
+                            children: []
+                        }
+                    }
+                }
+            }
+            $scope.config = $scope.app.pages['home'].config;
+        } else {
+            $timeout(function () {
+                $scope.config = $scope.app.pages['home'].config;
+                initCanvas();
+            }, 1000);
+        }
     }
+
+    function initCanvas() {
+        var elem = angular.element('#appContainer');
+        $scope.config.children.forEach(function (e) {
+            $scope.$broadcast("element-add", e, elem, false);
+            function buildRecursive(e) {
+                if (e.children) {
+                    e.children.forEach(function (c) {
+                        $timeout(function () {
+                            var father = angular.element('#' + e.id);
+                            $scope.$broadcast("element-add", c, father, false);
+                            buildRecursive(c);
+                        }, 1000);
+                    })
+                }
+            }
+
+            buildRecursive(e);
+        })
+    }
+
+
+    function appReady() {
+        $rootScope.$broadcast("app-ready", $scope.app);
+    }
+
     function guidGenerator() {
-        var S4 = function () {
-            return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-        };
-        return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
+        return "component_" + chance.integer({min: 0});
     }
 });
 
@@ -70,11 +170,27 @@ builder.controller("AppComponentsController", function ($scope) {
             clazz: "bar-light",
             tpl: "tpl/header.html"
         },
+        "button": {
+            type: "Button",
+            title: "New Button",
+            clazz: "button-light",
+            canEdit: true,
+            tpl: "tpl/button.html"
+        },
         "content": {
             type: "Content",
             title: "I am Content",
             accept: ["List"],
             tpl: "tpl/content.html"
+        },
+        "card": {
+            type: "Card",
+            title: "I am Card",
+            canEdit: true,
+            tpl: "tpl/card.html",
+            source: {
+                type: 'SQL'
+            }
         },
         "footer": {
             type: "Footer",
@@ -84,7 +200,23 @@ builder.controller("AppComponentsController", function ($scope) {
         },
         "list": {
             type: "List",
-            tpl: "tpl/list.html"
+            tpl: "tpl/list.html",
+            canEdit: true,
+            source: {
+                type: 'Array',
+                data: ['Item 1', "Item 2"]
+            }
+        },
+        "tabs": {
+            type: "Tabs",
+            tpl: "tpl/tabs.html",
+            dynamic: true
+        },
+        "tab": {
+            type: "Tab",
+            tpl: "tpl/tab.html",
+            title: "New Tab",
+            dynamic: true
         }
 
     }
@@ -100,6 +232,29 @@ builder.controller("AppComponentDetailsController", function ($rootScope, $scope
     })
 
 });
+builder.controller("AppPageController", function ($rootScope, $scope, $modal) {
+
+
+    $rootScope.$on("app-ready", function (e, app) {
+        $scope.app = app;
+        $scope.selected = 'home';
+    })
+
+    $scope.newPage = function () {
+
+        var modalScope = $scope.$new(false);
+        modalScope.save = function (name) {
+            $rootScope.$broadcast("page-add", name);
+            $scope.selected = name;
+        }
+        var myOtherModal = $modal({scope: modalScope, template: 'newPage.html', show: false});
+        myOtherModal.$promise.then(myOtherModal.show);
+    }
+    $scope.selectPage = function (page) {
+        $rootScope.$broadcast("page-selected", page);
+        $scope.selected = page;
+    }
+});
 
 builder.directive('componentBuilder', function ($rootScope, $compile, $http, $parse) {
 
@@ -108,6 +263,7 @@ builder.directive('componentBuilder', function ($rootScope, $compile, $http, $pa
         link: function (scope, element, attrs) {
 
             $rootScope.$on("element-edit", function (msg, data, event) {
+
                 $http.get('tpl/edit/' + data.type.toLowerCase() + '.html').then(function (response) {
                     var wScope = scope.$new()
                     wScope.config = data;
@@ -120,6 +276,33 @@ builder.directive('componentBuilder', function ($rootScope, $compile, $http, $pa
         }
     }
 })
+builder.directive('editWidget', function ($rootScope, $compile, $http, $parse) {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+
+            if (scope.config.canEdit) {
+                scope.$watch("config.tplEdit", function (data) {
+                    try {
+                        var el = angular.element($compile(data)(scope));
+                        element.empty();
+                        element.append(el);
+                    } catch (e) {
+                        console.log(e);
+                    }
+                })
+                var el = angular.element($compile(scope.config.tplEdit)(scope));
+                element.append(el);
+            } else {
+                $http.get(scope.config.tpl).then(function (response) {
+                    var el = angular.element($compile(response.data)(scope));
+                    element.append(el);
+                })
+            }
+
+        }
+    }
+})
 builder.directive('appBuilder', function ($rootScope, $compile, $http, $parse) {
 
     return {
@@ -127,10 +310,13 @@ builder.directive('appBuilder', function ($rootScope, $compile, $http, $parse) {
         link: function (scope, element, attrs) {
 
 
+            $rootScope.$on('page-clear', function () {
+                element.empty();
+            })
             scope.$on("element-add", function (evt, data, elem, toAdd) {
                 if (data) {
                     $http.get('tpl/edit.html').then(function (response) {
-                        if (!toAdd) {
+                        if (toAdd) {
                             var pconfig = scope.getConfigParent(elem);
                             if (!pconfig.children) {
                                 pconfig.children = [];
@@ -143,8 +329,19 @@ builder.directive('appBuilder', function ($rootScope, $compile, $http, $parse) {
                             e.stopPropagation();
                             $rootScope.$broadcast("element-edit", data, e);
                         }
-                        var el = angular.element($compile(response.data)(wScope));
-                        elem.append(el);
+
+                        if (data.canEdit && !data.tplEdit) {
+
+                            $http.get(data.tpl).then(function (res) {
+                                wScope.config.tplEdit = res.data;
+                                var el = angular.element($compile(response.data)(wScope));
+                                elem.append(el);
+                            });
+                        } else {
+                            var el = angular.element($compile(response.data)(wScope));
+                            elem.append(el);
+                        }
+
                     });
                 }
             })
@@ -217,6 +414,52 @@ builder.controller("HeaderDetailsController", function ($rootScope, $scope) {
 
     $scope.config = $scope.$parent.config;
     $scope.classes = ['bar-light', 'bar-stable', 'bar-positive', 'bar-calm', 'bar-balanced', 'bar-energized', 'bar-assertive', 'bar-royal', 'bar-dark'];
+
+});
+builder.controller("ButtonDetailsController", function ($rootScope, $scope) {
+
+    $scope.config = $scope.$parent.config;
+    $scope.editorOptions = {
+        lineWrapping: true,
+        lineNumbers: true,
+        readOnly: false,
+        mode: 'htmlmixed'
+    };
+    $scope.classes = ['button-light', 'button-stable', 'button-positive', 'button-calm', 'button-balanced', 'button-energized', 'button-assertive', 'button-royal', 'button-dark'];
+
+});
+builder.controller("ListDetailsController", function ($rootScope, $scope) {
+
+    $scope.config = $scope.$parent.config;
+    $scope.sources = ["Array", "SQL"];
+
+    $scope.editorOptions = {
+        lineWrapping: true,
+        lineNumbers: true,
+        readOnly: false,
+        mode: 'htmlmixed'
+    };
+
+
+});
+builder.controller("CardDetailsController", function ($rootScope, $scope) {
+
+    $scope.config = $scope.$parent.config;
+
+    console.log($scope.config);
+    $scope.editorOptions = {
+        lineWrapping: true,
+        lineNumbers: true,
+        readOnly: false,
+        mode: 'htmlmixed'
+    };
+
+
+});
+builder.controller("PageDetailsController", function ($rootScope, $scope) {
+
+
+    $scope.config = $scope.$parent.config;
 
 });
 builder.controller("FooterDetailsController", function ($rootScope, $scope) {

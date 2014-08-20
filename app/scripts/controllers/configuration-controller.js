@@ -250,3 +250,15 @@ configModule.controller("AllocationController", ['$scope', '$routeParams', '$loc
 
 
 }]);
+
+configModule.controller("AppIFrameController", ['$scope', '$routeParams', '$location', 'DatabaseApi', 'Database', function ($scope, $routeParams, $location, DatabaseApi, Database) {
+
+
+    $scope.initIFrame = function () {
+
+
+        document.getElementById('appBuilderFrame').contentWindow.OApp = {};
+        document.getElementById('appBuilderFrame').contentWindow.OApp.url = API;
+        document.getElementById('appBuilderFrame').contentWindow.OApp.db = $routeParams.database;
+    }
+}]);
