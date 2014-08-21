@@ -178,13 +178,13 @@ module.exports = function (grunt) {
           }
       },
       useminPrepare: {
-          html: '<%= yeoman.app %>/index.html',
+          html: ['<%= yeoman.app %>/index.html','<%= yeoman.app %>/views/ionic/appIframe.html'],
           options: {
               dest: '<%= yeoman.dist %>'
           }
       },
       usemin: {
-          html: ['<%= yeoman.dist %>/{,*/}*.html'],
+          html: ['<%= yeoman.dist %>/{,*/}*.html','<%= yeoman.dist %>/views/ionic/appIframe.html'],
           css: ['<%= yeoman.dist %>/styles/{,*/}*.css'],
           options: {
               dirs: ['<%= yeoman.dist %>']
@@ -282,7 +282,8 @@ module.exports = function (grunt) {
                       'img/{,*/}*.{gif,webp,png,jpg}',
                       'styles/{,*/}*.{png}',
                       'font/*',
-                      'data/**/*'
+                      'data/**/*',
+                      'dist/**/*'
                   ]
               }]
           }

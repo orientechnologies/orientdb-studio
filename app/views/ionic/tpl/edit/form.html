@@ -1,12 +1,7 @@
-<form role="form" ng-controller="ListDetailsController">
+<form role="form" ng-controller="CardDetailsController">
     <div class="form-group">
         <label for="inputTitle" class="control-label">Title</label>
         <input type="text" ng-model="config.title" class="form-control" id="inputTitle" placeholder="Title">
-    </div>
-    <div class="form-group">
-        <label for="inputClazz" class="control-label">Source</label>
-        <select id="inputClazz" class="form-control" ng-model="config.source.type"
-                ng-options="source for source in sources"></select>
     </div>
     <div class="form-group" ng-show="config.source.type == 'SQL'">
         <label for="inputQuery" class="control-label">Data</label>

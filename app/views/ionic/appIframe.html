@@ -14,6 +14,7 @@
 
         }
     </script>
+    <!-- build:css styles/builder.css -->
     <link href="../../components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
     <link href="../../components/ionic/release/css/ionic.css" rel="stylesheet">
     <link href="../../components/font-awesome/css/font-awesome.css" rel="stylesheet">
@@ -21,6 +22,8 @@
     <link rel="stylesheet" href="../../components/codemirror/addon/hint/show-hint.css">
     <link href="../../styles/ionic-builder.css" rel="stylesheet">
 
+    <!-- endbuild -->
+    <!-- build:js scripts/builder.js -->
 
     <script src="../../components/jquery/dist/jquery.js"></script>
     <script src="../../components/jquery-ui/jquery-ui.js"></script>
@@ -42,31 +45,16 @@
     <script src="../../scripts/ionic/builder.js"></script>
 
     <script src="../../scripts/ionic/widget.js"></script>
-
+    <!-- endbuild -->
 </head>
 <body ng-app="builder">
 
+
 <div class="container-fluid container-builder">
     <div class="row">
-        <div class="col-md-4 components">
-            <div ng-controller="AppPageController">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        App
-                    </div>
-                    <div class="panel-body">
-                        <form>
-                            <div class="form-group">
-                                <label for="inputField" class="control-label">Name </label>
-                                <input id="inputField" ng-model="app.name"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="inputDb" class="control-label">Db </label>
-                                <input id="inputDb" ng-model="app.db"></textarea>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+        <div class="col-md-3 components">
+            <div ng-controller="AppPageController" ng-show="!preview">
+
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         Pages
@@ -75,61 +63,55 @@
                         </div>
                     </div>
 
-                    <div class="panel-body">
+                    <div class="panel-body scroll-pane">
                         <ul class="nav nav-pills nav-stacked">
                             <li ng-class="{ 'active' : key == selected}" ng-click="selectPage(key)"
                                 ng-repeat="(key, value) in app.pages">
-                                <a href="javascript:void(0)">{{key}}</a>
+                                <a href="javascript:void(0)">{{app.pages[key].title}}</a>
                             </li>
                         </ul>
                     </div>
                 </div>
             </div>
-            <div class="panel panel-default" ng-controller="AppComponentsController">
+            <div class="panel panel-default " ng-controller="AppComponentsController" ng-show="!preview">
                 <div class="panel-heading">
                     Components
                 </div>
-                <div class="panel-body container-fluid">
+                <div class="panel-body container-fluid scroll-pane">
 
-                    <div class="row">
-                        <div class="col-md-3" ng-repeat="(key, value) in components">
+                    <ul class="nav nav-pills nav-stacked">
+                        <li ng-repeat="(key, value) in components">
                             <a href="" draggable drag-data="components[key]">{{components[key].type}}</a>
-                        </div>
-                    </div>
+                        </li>
+                    </ul>
+
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="preview-container" ng-controller="AppBuilderController">
                 <div class="row">
-                    <div class="col-md-8 col-md-offset-2">
-                        <div class="btn-group">
-                            <button class="btn btn-primary" ng-click="save()">
-                                <i class="fa fa-save"></i>
-                            </button>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-primary" ng-click="clear()">
-                                <i class="fa fa-trash-o"></i>
-                            </button>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-primary" ng-click="preview()">
-                                <i class="fa fa-eye"></i>
-                            </button>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-primary" ng-click="publish()">
-                                <i class="fa fa-cloud-upload"></i>
-                            </button>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-primary" ng-click="download()">
-                                <i class="fa fa-download"></i>
-                            </button>
-                        </div>
-                        <div class="btn-group">
-                            <input type="checkbox" ng-model="preview">
+                    <div class="col-md-12 ">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" ng-click="save()">
+                                        <i class="fa fa-save"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="btn-group btn-group-justified">
+                                    <ion-toggle ng-model="preview" toggle-class="toggle-calm">Preview</ion-toggle>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" ng-click="clear()">
+                                        <i class="fa fa-trash-o"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -138,13 +120,13 @@
                         <div id="appContainer" class="preview-body" app-builder droppable
                              drop-success="onDropComplete($data,$event,$element)">
                         </div>
-                        <div class="actions-container" ng-style="{ 'left' : left, 'top' : top }"
-                             ng-class="{ 'hide' : !selected}">
-                            <div class="actions">
-                                <i class="fa fa-arrows"></i>
-                                <i class="fa fa-times-circle-o" ng-click="remove()"></i>
-                            </div>
-                        </div>
+                        <!--<div class="actions-container" ng-style="{ 'left' : left, 'top' : top }"-->
+                        <!--ng-class="{ 'hide' : !selected}">-->
+                        <!--<div class="actions">-->
+                        <!--<i class="fa fa-arrows"></i>-->
+                        <!--<i class="fa fa-times-circle-o" ng-click="remove()"></i>-->
+                        <!--</div>-->
+                        <!--</div>-->
                     </div>
                     <div ng-if="preview">
 
@@ -158,11 +140,14 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 components" ng-controller="AppComponentDetailsController">
-            <div class="panel panel-default">
+        <div class="col-md-5 components" ng-controller="AppComponentDetailsController" ng-show="!preview">
+            <div class="panel panel-default ">
                 <div class="panel-heading">
                     <div class="panel-title">
                         {{config.type}}
+                        <div class="pull-right">
+                            <i class="fa fa-trash-o" ng-show="config" ng-click="remove()"></i>
+                        </div>
                     </div>
                 </div>
                 <div class="panel-body" component-builder>

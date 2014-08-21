@@ -1,107 +1,109 @@
-<div class="row browse-container">
-    <div class="query-container master-query">
+<div class="container-page">
+    <div class="row browse-container">
+        <div class="query-container master-query">
 
-        <div class="query-actions" ng-show="hideSettings">
+            <div class="query-actions" ng-show="hideSettings">
 
-            <div class="btn-toolbar pull-right">
-                <div class="btn-group">
-                    <button ng-click="query()" ng-disabled="!queryText" class="btn btn-sm "><i
-                            class="fa fa-cog"></i>
-                        Run
-                    </button>
+                <div class="btn-toolbar pull-right">
+                    <div class="btn-group">
+                        <button ng-click="query()" ng-disabled="!queryText" class="btn btn-sm "><i
+                                class="fa fa-cog"></i>
+                            Run
+                        </button>
+                    </div>
+                    <div class="btn-group config">
+                        <a class="btn btn-trasparent btn-sm"
+                           data-placement="bottom"
+                           data-title="Query configuration"
+                           data-template="views/database/browseConfig.html"
+                           bs-popover
+                           data-toggle="dropdown"
+                           href="javascript:void(0)">
+                            <i class="icon-wrench"></i>
+                            <b class="caret"></b>
+                        </a>
+                    </div>
                 </div>
-                <div class="btn-group config">
-                    <a class="btn btn-trasparent btn-sm"
-                       data-placement="bottom"
-                       data-title="Query configuration"
-                       data-template="views/database/browseConfig.html"
-                       bs-popover
-                       data-toggle="dropdown"
-                       href="javascript:void(0)">
-                        <i class="icon-wrench"></i>
-                        <b class="caret"></b>
+            </div>
+            <div class="query-body">
+                <div class="query-bookmark bookmarks">
+                    <a class="" href="javascript:void(0)" data-placement="bottom"
+                       data-title="Add bookmark"
+                       data-template="views/database/bookmark.html"
+                       bs-popover>
+                        <i class="fa fa-star"></i>
                     </a>
                 </div>
+
+                <form ng-submit="query()" class="form-inline">
+                    <div ui-codemirror="editorOptions" ng-model="queryText"></div>
+                </form>
+            </div>
+            <div class="query-info">
+                <form class="form-inline pull-right" ng-show="!hideSettings">
+                    <fieldset>
+
+                        <div class="form-group">
+                            <label>Content Type</label>
+                            <select ng-model="selectedContentType" class="form-control input-sm"
+                                    ng-options="q for q in contentType"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Limit</label>
+                            <input type="text" class="form-control input-sm" ng-model="limit"/>
+                        </div>
+                        <div class="form-group">
+                            <label> Keep result set in history</label>
+                            <input type="text" class="form-control input-sm" ng-model="keepLimit"/>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" class="" ng-model="shallow"/> Shallow collection
+                            </label>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" class="" ng-model="hideSettings"/> Hide settings
+                            </label>
+                        </div>
+                        <button ng-click="query()" ng-disabled="!queryText" class="btn btn-sm btn-primary"><i
+                                class="icon-white icon-cog"></i>
+                            Run
+                        </button>
+
+                    </fieldset>
+                </form>
             </div>
         </div>
-        <div class="query-body">
-            <div class="query-bookmark bookmarks">
-                <a class="" href="javascript:void(0)" data-placement="bottom"
-                   data-title="Add bookmark"
-                   data-template="views/database/bookmark.html"
-                   bs-popover>
-                    <i class="fa fa-star"></i>
-                </a>
-            </div>
+        <div id="download">
 
-            <form ng-submit="query()" class="form-inline">
-                <div ui-codemirror="editorOptions" ng-model="queryText"></div>
-            </form>
         </div>
-        <div class="query-info">
-            <form class="form-inline pull-right" ng-show="!hideSettings">
-                <fieldset>
-
-                    <div class="form-group">
-                        <label>Content Type</label>
-                        <select ng-model="selectedContentType" class="form-control input-sm"
-                                ng-options="q for q in contentType"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Limit</label>
-                        <input type="text" class="form-control input-sm" ng-model="limit"/>
-                    </div>
-                    <div class="form-group">
-                        <label> Keep result set in history</label>
-                        <input type="text" class="form-control input-sm" ng-model="keepLimit"/>
-                    </div>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" class="" ng-model="shallow"/> Shallow collection
-                        </label>
-                    </div>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" class="" ng-model="hideSettings"/> Hide settings
-                        </label>
-                    </div>
-                    <button ng-click="query()" ng-disabled="!queryText" class="btn btn-sm btn-primary"><i
-                            class="icon-white icon-cog"></i>
-                        Run
-                    </button>
-
-                </fieldset>
-            </form>
-        </div>
-    </div>
-    <div id="download">
-
-    </div>
 
 
-    <div class="row" ng-show="timeline.length >1">
-        <div class="col-md-6">
-            <form class="form-search search-history">
-                <div class="input-group">
-                    <input type="text" class="input-xxlarge form-control search-query" ng-model="search.query"
-                           placeholder="Search history">
+        <div class="row" ng-show="timeline.length >1">
+            <div class="col-md-6">
+                <form class="form-search search-history">
+                    <div class="input-group">
+                        <input type="text" class="input-xxlarge form-control search-query" ng-model="search.query"
+                               placeholder="Search history">
                     <span class="input-group-btn">
                     <button type="submit" class="btn" ng-click="clear()">
                         <i class="fa fa-trash-o"></i>
                     </button>
                         </span>
-                </div>
-            </form>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-6">
+            </div>
         </div>
-        <div class="col-md-6">
+
+        <div class="container-fluid" id="fixed" when-scrolled="loadMore()">
+            <div class="row history-item" ng-repeat="item in timeline | filter:search">
+                <div ng-include="'views/database/query.html'"></div>
+            </div>
         </div>
+
+
     </div>
-
-    <div class="container-fluid" id="fixed" when-scrolled="loadMore()">
-        <div class="row history-item" ng-repeat="item in timeline | filter:search">
-            <div ng-include="'views/database/query.html'"></div>
-        </div>
-    </div>
-
-
 </div>

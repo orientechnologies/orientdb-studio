@@ -5,7 +5,7 @@ widget.controller("TabController", function ($scope) {
 
 });
 
-widget.controller("ListController", function ($scope, OrientDB) {
+widget.controller("ListController", function ($scope, OrientDB, $location) {
 
 
     $scope.$watch("config.source.type", function (data) {
@@ -19,6 +19,9 @@ widget.controller("ListController", function ($scope, OrientDB) {
         }
 
     })
+    $scope.detail = function (location) {
+        $location.path(location)
+    }
     $scope.getValue = function (d) {
         if ($scope.config.source.type == 'Array') {
             return d;
@@ -28,7 +31,48 @@ widget.controller("ListController", function ($scope, OrientDB) {
     }
 
 });
-widget.controller("CardController", function ($scope, $routeParams, OrientDB) {
+
+widget.controller("FormController", function ($scope, $routeParams, $ionicPopup, OrientDB) {
+
+    $scope.$watch("config.source.value", function (val) {
+        if (val) {
+            var query = S(val).template($routeParams).s;
+            OrientDB.query(query).then(function (data) {
+                $scope.data = data[0];
+            })
+        }
+    })
+    $scope.save = function () {
+
+        OrientDB.save($scope.data).then(function (data) {
+
+            $scope.data = data
+            var alertPopup = $ionicPopup.alert({
+                title: '',
+                template: "Item saved correctly."
+            });
+            alertPopup.then(function (res) {
+
+            });
+        })
+    }
+})
+widget.controller("CardController", function ($scope, $routeParams, $ionicPopup, OrientDB) {
+
+
+    $scope.$watch("config.source.value", function (val) {
+        if (val) {
+            var query = S(val).template($routeParams).s;
+            OrientDB.query(query).then(function (data) {
+                $scope.data = data[0];
+            })
+        }
+    })
+
+
+});
+
+widget.controller("ContentController", function ($scope, $routeParams, OrientDB) {
 
 
     $scope.$watch("config.source.value", function (val) {
@@ -39,6 +83,15 @@ widget.controller("CardController", function ($scope, $routeParams, OrientDB) {
             })
         }
     })
+
+
+});
+widget.controller("HeaderBackController", function ($scope, $window) {
+
+
+    $scope.back = function () {
+        $window.history.back();
+    }
 
 
 });
@@ -59,6 +112,20 @@ widget.factory('OrientDB', function ($http, $q, $window) {
             var deferred = $q.defer();
             $http.post(text, 'select from app').success(function (data) {
                 deferred.resolve(data.result[0]);
+            }).error(function (e) {
+                    deferred.reject(e);
+                })
+            return  deferred.promise;
+        },
+        save: function (data) {
+
+            var deferred = $q.defer();
+            var url = OApp.url;
+            var db = OApp.db;
+            var rid = data['@rid'];
+            var text = url + 'document/' + db + "/" + rid.replace("#", '');
+            $http.put(text, data).success(function (d) {
+                deferred.resolve(d);
             })
             return  deferred.promise;
         },

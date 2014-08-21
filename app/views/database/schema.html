@@ -1,107 +1,110 @@
-<div class="row">
-    <div class="panel panel-default panel-orient">
-        <div class="panel-heading">
-            Schema Manager
-            <div class="panel-actions">
-                <div class="btn-toolbar">
-                    <div class="btn-group">
-                        <button href="javascript:void(0)" class="btn btn-default btn-sm"
-                                ng-click="createNewClass()"><i
-                                class="icon-plus"></i>
-                            New
-                            Class
-                        </button>
-                    </div>
+<div class="container-page">
 
-                    <div class="btn-group">
-                        <button href="javascript:void(0)" class="btn btn-default btn-sm" ng-click="allIndexes()"><i
-                                class="icon-list"></i>
-                            All Indexes
-                        </button>
-                    </div>
-                    <div class="btn-group">
-                        <button href="javascript:void(0)" class="btn btn-default btn-sm"
-                                ng-click="rebuildAllIndexes()">
-                            <i
-                                    class="icon-refresh"></i>
-                            Rebuild All Indexes
-                        </button>
+    <div class="row">
+        <div class="panel panel-default panel-orient">
+            <div class="panel-heading">
+                Schema Manager
+                <div class="panel-actions">
+                    <div class="btn-toolbar">
+                        <div class="btn-group">
+                            <button href="javascript:void(0)" class="btn btn-default btn-sm"
+                                    ng-click="createNewClass()"><i
+                                    class="icon-plus"></i>
+                                New
+                                Class
+                            </button>
+                        </div>
+
+                        <div class="btn-group">
+                            <button href="javascript:void(0)" class="btn btn-default btn-sm" ng-click="allIndexes()"><i
+                                    class="icon-list"></i>
+                                All Indexes
+                            </button>
+                        </div>
+                        <div class="btn-group">
+                            <button href="javascript:void(0)" class="btn btn-default btn-sm"
+                                    ng-click="rebuildAllIndexes()">
+                                <i
+                                        class="icon-refresh"></i>
+                                Rebuild All Indexes
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="panel-body class-body">
-            <div class="row">
+            <div class="panel-body class-body">
+                <div class="row">
 
-                <div class="col-md-8">
-                    <form class="form-search">
-                        <div class="input-group">
-                            <input type="text" class="input-xxlarge form-control search-query" ng-model="queryy"
-                                   placeholder="Search class">
+                    <div class="col-md-8">
+                        <form class="form-search">
+                            <div class="input-group">
+                                <input type="text" class="input-xxlarge form-control search-query" ng-model="queryy"
+                                       placeholder="Search class">
                         <span class="input-group-btn">
                         <button type="submit" class="btn" ng-click="">
                             <i class="fa fa-search"></i>
                         </button>
                             </span>
-                        </div>
-                    </form>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+
+                    </div>
                 </div>
-                <div class="col-md-4">
+                <div class="row">
+                    <div class="col-md-12 nomargin">
 
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12 nomargin">
+                        <table class="table table-striped table-bordered table-hover table-condensed pointer">
+                            <thead>
+                            <tr>
+                                <th ng-repeat="header in headers">
+                                    {{header}}
+                                </th>
+                                <th>Actions</th>
+                            </tr>
 
-                    <table class="table table-striped table-bordered table-hover table-condensed pointer">
-                        <thead>
-                        <tr>
-                            <th ng-repeat="header in headers">
-                                {{header}}
-                            </th>
-                            <th>Actions</th>
-                        </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="result in listClassesTotal | filter: queryy ">
+                                <td ng-click="openClass(result)">{{result['name']}}</td>
+                                <td ng-click="openClass(result)">{{result['superClass']}}</td>
+                                <td ng-click="openClass(result)">{{result['alias']}}</td>
+                                <td ng-click="openClass(result)">
+                                    <input type="checkbox" ng-model="result['abstract']" ng-disabled="true">
+                                </td>
 
-                        </thead>
-                        <tbody>
-                        <tr ng-repeat="result in listClassesTotal | filter: queryy ">
-                            <td ng-click="openClass(result)">{{result['name']}}</td>
-                            <td ng-click="openClass(result)">{{result['superClass']}}</td>
-                            <td ng-click="openClass(result)">{{result['alias']}}</td>
-                            <td ng-click="openClass(result)">
-                                <input type="checkbox" ng-model="result['abstract']" ng-disabled="true">
-                            </td>
+                                <td ng-click="openClass(result)">{{result['clusters']}}</td>
+                                <td ng-click="openClass(result)">{{result['defaultCluster']}}</td>
+                                <td>
+                                    <select type="text" ng-options="opt for opt in clusterStrategies"
+                                            ng-change="setClusterStrategy(result)"
+                                            ng-model="result['clusterSelection']">
+                                    </select>
+                                </td>
+                                <td ng-click="openClass(result)">{{result['records']}}</td>
+                                <td>
+                                    <button href="javascript:void(0)" class="btn btn-default btn-xs"
+                                            ng-click="queryAll(result['name'])">
+                                        <i
+                                                class="fa fa-list-alt"></i> Query All
+                                    </button>
 
-                            <td ng-click="openClass(result)">{{result['clusters']}}</td>
-                            <td ng-click="openClass(result)">{{result['defaultCluster']}}</td>
-                            <td>
-                                <select type="text" ng-options="opt for opt in clusterStrategies"
-                                        ng-change="setClusterStrategy(result)"
-                                        ng-model="result['clusterSelection']">
-                                </select>
-                            </td>
-                            <td ng-click="openClass(result)">{{result['records']}}</td>
-                            <td>
-                                <button href="javascript:void(0)" class="btn btn-default btn-xs"
-                                        ng-click="queryAll(result['name'])">
-                                    <i
-                                            class="fa fa-list-alt"></i> Query All
-                                </button>
+                                    <button href="javascript:void(0)" class="btn btn-default btn-xs"
+                                            ng-click="createRecord(result['name'])">
+                                        <i
+                                                class="fa fa-plus"></i> New Record
+                                    </button>
 
-                                <button href="javascript:void(0)" class="btn btn-default btn-xs"
-                                        ng-click="createRecord(result['name'])">
-                                    <i
-                                            class="fa fa-plus"></i> New Record
-                                </button>
-
-                                <button href="javascript:void(0)" class="btn btn-danger btn-xs"
-                                        ng-click="dropClass(result)">
-                                    <i class="fa fa-trash-o"></i> Drop
-                                </button>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                                    <button href="javascript:void(0)" class="btn btn-danger btn-xs"
+                                            ng-click="dropClass(result)">
+                                        <i class="fa fa-trash-o"></i> Drop
+                                    </button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

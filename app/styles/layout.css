@@ -275,6 +275,17 @@ text.vicon {
 .container-studio .container-fluid {
     padding: 0px;
 }
+.container-page {
+    padding-left: 25px;
+    padding-right: 25px;
+}
+.row {
+    margin: 0px;
+}
+.container-app .row{
+    margin-left: -15px;
+    margin-right: -15px;
+}
 div.container-studio {
     padding-top: 5px !important;
 }

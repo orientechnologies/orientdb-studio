@@ -4,7 +4,7 @@
     height: 550px;
     display: block;
     margin: 0 auto;
-    margin-top: 20px;
+    margin-top: 0px;
 }
 
 .preview-body {
@@ -17,6 +17,11 @@
     top: 70px;
     left: 63px;
     display: block;
+}
+
+.col-centered {
+    float: none;
+    margin: 0 auto;
 }
 
 .preview {
@@ -52,8 +57,11 @@ body {
 
 }
 
-.components {
 
+
+.scroll-pane {
+    max-height: 300px;
+    overflow-y: scroll;
 }
 
 html, body {
@@ -102,7 +110,7 @@ html, body {
 }
 
 div.widget-container > *:hover {
-    /*border: 1px solid red;*/
+    border: 1px solid red;
 }
 
 .container-builder .content {

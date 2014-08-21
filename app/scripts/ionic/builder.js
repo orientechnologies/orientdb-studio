@@ -26,15 +26,13 @@ builder.controller("AppBuilderController", function ($scope, $rootScope, $timeou
 
         OrientDB.setApp($scope.app).then(function (data) {
             $scope.app = data;
+            OApp.notify("Application " + data.name + "saved correctly.");
         })
     }
-    $scope.preview = function () {
-        var obj = $window.open('/dist/index.html?app=' + $scope.app.name, 'preview', 'width=300, height=400');
-
-    }
+    $scope.$watch("preview", function (data) {
+        $rootScope.$broadcast("app-preview", data);
+    })
     $scope.initIFrame = function () {
-
-
         document.getElementById('appBuilderFrame').contentWindow.OApp = {};
         document.getElementById('appBuilderFrame').contentWindow.OApp.url = OApp.url;
         document.getElementById('appBuilderFrame').contentWindow.OApp.db = OApp.db;
@@ -43,7 +41,7 @@ builder.controller("AppBuilderController", function ($scope, $rootScope, $timeou
         $scope.app.pages = {
             'home': {
                 type: "Page",
-                url: "#/home",
+                url: "/home",
                 config: {
                     name: "Container",
                     children: []
@@ -69,7 +67,8 @@ builder.controller("AppBuilderController", function ($scope, $rootScope, $timeou
 
         $scope.app.pages[page] = {
             type: "Page",
-            url: "#/" + page,
+            title: page,
+            url: "/" + page.toLowerCase(),
             config: {
                 name: "Container",
                 children: []
@@ -85,13 +84,28 @@ builder.controller("AppBuilderController", function ($scope, $rootScope, $timeou
         initCanvas();
         $rootScope.$broadcast("element-edit", $scope.app.pages[page], msg);
     })
-    $scope.remove = function () {
+    $rootScope.$on("element-remove", function () {
+
         var elemScope = angular.element($scope.selected.target).scope();
-        var pConfig = elemScope.$parent.config;
-        var idx = pConfig.children.indexOf(elemScope.config);
-        pConfig.children.splice(idx, 1);
-        angular.element($scope.selected.target).parent().remove()
-    }
+        var meConfig = elemScope.config ? elemScope.config : elemScope.$parent.config;
+        if (meConfig.type == "Page") {
+
+        } else {
+            var pConfig = elemScope.config
+            var parent = elemScope.$parent;
+            while (pConfig == elemScope.config) {
+                pConfig = parent.config;
+                parent = parent.$parent;
+            }
+            var idx = pConfig.children.indexOf(meConfig);
+
+            pConfig.children.splice(idx, 1);
+            angular.element($scope.selected.target).parent().remove()
+        }
+
+
+    })
+
 
     $scope.getConfigParent = function (elem) {
         var elemScope = angular.element(elem).scope();
@@ -102,18 +116,22 @@ builder.controller("AppBuilderController", function ($scope, $rootScope, $timeou
             $scope.app = app;
             appReady();
             initApp();
+            $scope.appPreview = "/dist/index.html?db=" + OApp.db;
+        }, function (err) {
+            initApp();
+            $scope.appPreview = "/dist/index.html?db=" + OApp.db;
         })
     }, 1000)
 
-    $scope.appPreview = "/dist/index.html";
     function initApp() {
         if (!$scope.app) {
             $scope.app = {
-                name: 'test',
+                name: OApp.db,
                 pages: {
                     'home': {
                         type: "Page",
-                        url: "#/home",
+                        title: "Home",
+                        url: "/home",
                         config: {
                             name: "Container",
                             children: []
@@ -122,6 +140,7 @@ builder.controller("AppBuilderController", function ($scope, $rootScope, $timeou
                 }
             }
             $scope.config = $scope.app.pages['home'].config;
+            appReady();
         } else {
             $timeout(function () {
                 $scope.config = $scope.app.pages['home'].config;
@@ -160,8 +179,12 @@ builder.controller("AppBuilderController", function ($scope, $rootScope, $timeou
     }
 });
 
-builder.controller("AppComponentsController", function ($scope) {
+builder.controller("AppComponentsController", function ($scope, $rootScope) {
 
+
+    $rootScope.$on("app-preview", function (evt, data) {
+        $scope.preview = data;
+    })
 
     $scope.components = {
         "header": {
@@ -177,17 +200,35 @@ builder.controller("AppComponentsController", function ($scope) {
             canEdit: true,
             tpl: "tpl/button.html"
         },
+        "header-back": {
+            type: "Header-Back",
+            title: "New Header",
+            clazz: "bar-light",
+            tpl: "tpl/header-back.html"
+        },
         "content": {
             type: "Content",
             title: "I am Content",
-            accept: ["List"],
-            tpl: "tpl/content.html"
+            canEdit: true,
+            tpl: "tpl/content.html",
+            source: {
+                type: 'SQL'
+            }
         },
         "card": {
             type: "Card",
             title: "I am Card",
             canEdit: true,
             tpl: "tpl/card.html",
+            source: {
+                type: 'SQL'
+            }
+        },
+        "form": {
+            type: "Form",
+            title: "I am Form",
+            canEdit: true,
+            tpl: "tpl/form.html",
             source: {
                 type: 'SQL'
             }
@@ -206,18 +247,18 @@ builder.controller("AppComponentsController", function ($scope) {
                 type: 'Array',
                 data: ['Item 1', "Item 2"]
             }
-        },
-        "tabs": {
-            type: "Tabs",
-            tpl: "tpl/tabs.html",
-            dynamic: true
-        },
-        "tab": {
-            type: "Tab",
-            tpl: "tpl/tab.html",
-            title: "New Tab",
-            dynamic: true
         }
+//        "tabs": {
+//            type: "Tabs",
+//            tpl: "tpl/tabs.html",
+//            dynamic: true
+//        },
+//        "tab": {
+//            type: "Tab",
+//            tpl: "tpl/tab.html",
+//            title: "New Tab",
+//            dynamic: true
+//        }
 
     }
 
@@ -227,6 +268,13 @@ builder.controller("AppComponentsController", function ($scope) {
 builder.controller("AppComponentDetailsController", function ($rootScope, $scope) {
 
 
+    $scope.remove = function () {
+        $rootScope.$broadcast("element-remove");
+        $scope.config = null;
+    }
+    $rootScope.$on("app-preview", function (evt, data) {
+        $scope.preview = data;
+    })
     $rootScope.$on("element-edit", function (msg, data, event) {
         $scope.config = data;
     })
@@ -235,6 +283,9 @@ builder.controller("AppComponentDetailsController", function ($rootScope, $scope
 builder.controller("AppPageController", function ($rootScope, $scope, $modal) {
 
 
+    $rootScope.$on("app-preview", function (evt, data) {
+        $scope.preview = data;
+    })
     $rootScope.$on("app-ready", function (e, app) {
         $scope.app = app;
         $scope.selected = 'home';
@@ -272,7 +323,9 @@ builder.directive('componentBuilder', function ($rootScope, $compile, $http, $pa
                     element.append(el);
                 });
             })
-
+            $rootScope.$on("element-remove", function () {
+                element.empty();
+            })
         }
     }
 })
@@ -377,7 +430,12 @@ builder.directive('draggable', function ($rootScope, $compile, $http, $parse) {
         link: function (scope, element, attrs) {
 
             var draggable = element.draggable({
-                revert: true
+                revert: true,
+                zIndex: 2500,
+                appendTo: 'body',
+                containment: 'window',
+                scroll: false,
+                helper: 'clone'
             });
 
             scope.$watch(attrs.dragData, function (data) {
@@ -446,7 +504,6 @@ builder.controller("CardDetailsController", function ($rootScope, $scope) {
 
     $scope.config = $scope.$parent.config;
 
-    console.log($scope.config);
     $scope.editorOptions = {
         lineWrapping: true,
         lineNumbers: true,

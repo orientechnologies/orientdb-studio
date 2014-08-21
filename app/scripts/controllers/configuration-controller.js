@@ -251,7 +251,7 @@ configModule.controller("AllocationController", ['$scope', '$routeParams', '$loc
 
 }]);
 
-configModule.controller("AppIFrameController", ['$scope', '$routeParams', '$location', 'DatabaseApi', 'Database', function ($scope, $routeParams, $location, DatabaseApi, Database) {
+configModule.controller("AppIFrameController", ['$scope', '$routeParams', '$location', 'DatabaseApi', 'Database', 'Notification', function ($scope, $routeParams, $location, DatabaseApi, Database, Notification) {
 
 
     $scope.initIFrame = function () {
@@ -260,5 +260,15 @@ configModule.controller("AppIFrameController", ['$scope', '$routeParams', '$loca
         document.getElementById('appBuilderFrame').contentWindow.OApp = {};
         document.getElementById('appBuilderFrame').contentWindow.OApp.url = API;
         document.getElementById('appBuilderFrame').contentWindow.OApp.db = $routeParams.database;
+
+
+        document.getElementById('appBuilderFrame').contentWindow.OApp.notify = function (content) {
+
+            $scope.$apply(function () {
+                Notification.push({content: content});
+            });
+
+        }
+
     }
 }]);
