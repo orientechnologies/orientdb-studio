@@ -12,6 +12,10 @@
             </li>
         </ul>
     </div>
+    <div class="form-group" >
+        <label for="inputEditUrl" class="control-label">Edit Base Url</label>
+        <textarea id="inputEditUrl" ng-model="config.editUrl"></textarea>
+    </div>
     <div class="form-group" ng-show="config.source.type == 'SQL'">
         <label for="inputQuery" class="control-label">Data</label>
         <textarea id="inputQuery" ng-model="config.source.value"></textarea>

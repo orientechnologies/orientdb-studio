@@ -226,7 +226,7 @@ module.exports = function (grunt) {
               files: [{
                   expand: true,
                   cwd: '<%= yeoman.app %>',
-                  src: ['*.html', '*.htm','views/{,*/,*/*/}*.html'],
+                  src: ['*.html', '*.htm','views/{,*/,*/*/,*/*/*/}*.html','views/ionic/tpl/edit/*.html'],
                   dest: '<%= yeoman.dist %>'
               }]
           }
@@ -282,6 +282,7 @@ module.exports = function (grunt) {
                       'img/{,*/}*.{gif,webp,png,jpg}',
                       'styles/{,*/}*.{png}',
                       'font/*',
+                      'fonts/*',
                       'data/**/*',
                       'dist/**/*'
                   ]

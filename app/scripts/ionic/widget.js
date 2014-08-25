@@ -5,7 +5,7 @@ widget.controller("TabController", function ($scope) {
 
 });
 
-widget.controller("ListController", function ($scope, OrientDB, $location) {
+widget.controller("ListController", function ($scope, OrientDB, $location, $ionicModal) {
 
 
     $scope.$watch("config.source.type", function (data) {
@@ -19,8 +19,12 @@ widget.controller("ListController", function ($scope, OrientDB, $location) {
         }
 
     })
+
     $scope.detail = function (location) {
         $location.path(location)
+    }
+    $scope.edit = function (item) {
+        $location.path($scope.config.editUrl + '/' + item["@rid"].replace("#", ''));
     }
     $scope.getValue = function (d) {
         if ($scope.config.source.type == 'Array') {

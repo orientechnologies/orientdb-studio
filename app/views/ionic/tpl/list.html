@@ -1,7 +1,11 @@
-<ion-content id="{{config.id}}" class="has-header" droppable drop-success="onDropComplete($data,$event,$element)">
+<ion-content id="{{config.id}}" class="has-header">
     <ion-list ng-controller="ListController">
         <ion-item ng-repeat="d in data">
             {{ getValue(d) }}
+            <ion-option-button class="button-info"
+                               ng-click="edit(d)">
+                Edit
+            </ion-option-button>
         </ion-item>
     </ion-list>
 </ion-content>
