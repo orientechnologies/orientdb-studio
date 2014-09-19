@@ -1,4 +1,4 @@
-# [OrientDB Studio](https://github.com/orientechnologies/orientdb-studio)
+Look to the [Documentation](http://www.orientechnologies.com/docs/last/orientdb-studio.wiki/Home-page.html) for more information.
 
 ## Users
 #### OrientDB v1.6 or major
