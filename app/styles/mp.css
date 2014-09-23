@@ -1,0 +1,35 @@
+
+div.container-studio {
+
+    padding: 0px !important;
+    margin-top: 55px;
+}
+.app-iframe {
+    width: auto;
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    border: none;
+}
+.container-studio .container-fluid {
+    padding: 0px;
+}
+.container-studio .container-fluid > div {
+    /*padding-left: 25px;*/
+    /*padding-right: 25px;*/
+}
+.container-page {
+    padding-top: 15px;
+    padding-left: 25px;
+    padding-right: 25px;
+}
+.row {
+    margin: 0px;
+}
+.container-app .row{
+    margin-left: -15px;
+    margin-right: -15px;
+}
+html, body {
+    height:100%;
+}

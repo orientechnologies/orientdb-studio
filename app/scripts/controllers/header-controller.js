@@ -1,4 +1,4 @@
-angular.module('header.controller', ['database.services']).controller("HeaderController", ['$scope', '$routeParams', '$http', '$location', '$modal', '$q', 'Database', 'Aside', function ($scope, $routeParams, $http, $location, $modal, $q, Database, Aside) {
+angular.module('header.controller', ['database.services']).controller("HeaderController", ['$scope', '$routeParams', '$http', '$location', '$modal', '$q', 'Database', 'Aside','$rootScope', function ($scope, $routeParams, $http, $location, $modal, $q, Database, Aside,$rootScope) {
     $scope.database = Database;
     $scope.selectedMenu = null;
     $scope.menus = [];
