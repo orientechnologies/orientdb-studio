@@ -10,7 +10,8 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
         {name: "bookmarks", title: "Bookmarks"}
     ];
 
-    Aside.show({scope: $scope, title: "Bookmarks", template: 'views/database/context/bookmarksAside.html', show: false});
+
+    Aside.show({scope: $scope, title: "Bookmarks", template: 'views/database/context/bookmarksAside.html', show: false,absolute: false});
     $scope.item = {};
     $scope.queries = [];
     $scope.$watch("queryText", function (val) {
@@ -27,13 +28,10 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
     }
     $scope.countPage = 5;
 
-    $scope.setBookClass = function () {
-        if ($scope.bookmarksClass == "") {
-            $scope.bookmarksClass = "show";
-        } else {
-            $scope.bookmarksClass = "";
-        }
+    $scope.toggleBookmarks = function () {
+        Aside.toggle();
     }
+
 
     if (Database.hasClass(Bookmarks.CLAZZ)) {
         Bookmarks.getAll(Database.getName());
@@ -45,7 +43,7 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
 
     $scope.hideSettings = localStorageService.get("hideSettings");
     if ($scope.hideSettings == null) {
-        $scope.hideSettings = false;
+        $scope.hideSettings = true;
         localStorageService.add("hideSettings", $scope.hideSettings);
     } else {
         $scope.hideSettings = JSON.parse($scope.hideSettings);
@@ -81,7 +79,7 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
 
     }
     $scope.tm = $scope.timeline;
-    Database.setWiki("https://github.com/orientechnologies/orientdb-studio/wiki/Query");
+    Database.setWiki("Query.html");
 
     $scope.language = 'sql';
 
@@ -103,7 +101,10 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
                 });
 
             },
-            "Ctrl-Space": "autocomplete"
+            "Ctrl-Space": "autocomplete",
+            'Cmd-/': 'toggleComment',
+            'Ctrl-/': 'toggleComment'
+
 
         },
         onLoad: function (_cm) {
@@ -131,24 +132,30 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
         var queryBuffer = "" + $scope.queryText;
         var selection = $scope.cm.getSelection();
         if (selection && selection != "") {
-            console.log(selection);
             queryBuffer = "" + selection;
         }
 
         queryBuffer = queryBuffer.trim();
         queryBuffer = queryBuffer.replace(/\n/g, " ");
-        Spinner.start(function () {
-            CommandApi.interrupt(Database.getName(), queryBuffer).then(function () {
-                Spinner.stop();
+        queryBuffer = queryBuffer.replace(/\t/g, " ");
+        queryBuffer = queryBuffer.replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '');
+        if (queryBuffer.length != 0) {
+            Spinner.start(function () {
+                CommandApi.interrupt(Database.getName(), queryBuffer).then(function () {
+                    Spinner.stop();
+                });
             });
-        });
+        }
 
 
         if (queryBuffer.startsWith('g.')) {
             $scope.language = 'gremlin';
+        }else {
+            $scope.language = 'sql';
         }
         if (queryBuffer.startsWith('#')) {
             $location.path('/database/' + $routeParams.database + '/browse/edit/' + queryBuffer.replace('#', ''));
+            return;
         }
 
         var conttype;
@@ -161,22 +168,42 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
 
                 var item = new Object;
                 item.query = $scope.queryText;
+                item.executedQuery = queryBuffer;
                 if (selection && selection != "") {
                     item.query = selection;
                 }
 
                 item.language = $scope.language;
                 $scope.headers = Database.getPropertyTableFromResults(data.result);
-                if ($scope.headers.length == 00) {
+                if ($scope.headers.length == 0) {
                     $scope.alerts = new Array;
                     $scope.alerts.push({content: "No records found."});
                 }
+
                 $scope.rawData = JSON.stringify(data);
                 $scope.resultTotal = data.result;
                 $scope.results = data.result.slice(0, $scope.countPage);
                 $scope.currentPage = 1;
                 $scope.numberOfPage = new Array(Math.ceil(data.result.length / $scope.countPage));
+                item.subHeaders = { "a": {"name": "METADATA", span: 0}, "b": {"name": "PROPERTIES", span: 0}, "c": {"name": "IN", span: 0}, "d": {"name": "OUT", span: 0}};
+                $scope.headers.forEach(function (n) {
+                    if (n.startsWith("in_")) {
+                        item.subHeaders["c"].span++;
+                    } else if (n.startsWith("out_")) {
+                        item.subHeaders["d"].span++;
+                    } else if (n.startsWith('@')) {
+                        item.subHeaders["a"].span++;
+                    } else {
+                        item.subHeaders["b"].span++;
+                    }
+                });
+                $scope.headers.sort(function (a, b) {
+                    var aI = a.startsWith("in_") ? 2 : (a.startsWith("out_") ? 3 : ((a.startsWith("@") ? 0 : 1)));
+                    var bI = b.startsWith("in_") ? 2 : (b.startsWith("out_") ? 3 : ((b.startsWith("@") ? 0 : 1)));
+                    return aI - bI;
+                });
                 item.headers = $scope.headers;
+
                 item.rawData = $scope.rawData;
                 item.resultTotal = $scope.resultTotal;
                 item.results = $scope.results;
@@ -198,7 +225,7 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
                 $scope.nContext = $scope.items[1];
                 Notification.clear();
             } else {
-                Notification.push({content: "The command has been executed"});
+                Notification.push({content: "The command has been executed", autoHide: true});
             }
             Spinner.stopSpinner();
         }, function (data) {
@@ -206,6 +233,10 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
             $scope.headers = undefined;
             $scope.resultTotal = undefined;
             $scope.results = undefined;
+            if (!data) {
+                data = "The command has not been executed"
+            }
+            Notification.push({content: data, error: true, autoHide: true});
         });
 
     }
@@ -228,7 +259,9 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
     $scope.removeItem = function (item) {
         var idx = $scope.timeline.indexOf(item);
         $scope.timeline.splice(idx, 1);
-        localStorageService.add("Timeline", $scope.timeline);
+        var dbTime = localStorageService.get("Timeline");
+        dbTime[Database.getName()] = $scope.timeline;
+        localStorageService.add("Timeline", dbTime);
     }
 
 
@@ -246,15 +279,11 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
         $scope.keepLimit = data;
         localStorageService.add("keepLimit", data);
     });
+    $scope.$watch("hideSettings", function (data) {
+        $scope.hideSettings = data;
+        localStorageService.add("hideSettings", data);
+    });
 
-//    $scope.loadMore = function () {
-//        var len = $scope.queries.length;
-//        var lenTime = $scope.timeline.length;
-//        if (len < lenTime)
-//            $scope.queries.push($scope.timeline[len]);
-//    };
-//    $scope.loadMore();
-//    $scope.loadMore();
 
 }]);
 dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$location', 'Database', 'CommandApi', 'localStorageService', 'Spinner', 'ngTableParams', 'scroller', '$ojson', 'Graph', function ($scope, $routeParams, $filter, $location, Database, CommandApi, localStorageService, Spinner, ngTableParams, scroller, $ojson, Graph) {
@@ -265,6 +294,14 @@ dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$l
     if ($scope.item.rawData instanceof Object) {
         $scope.item.rawData = JSON.stringify($scope.item.rawData);
     }
+
+    $scope.indexes = []
+    var total = 0;
+    Object.keys($scope.item.subHeaders).forEach(function (e) {
+        total += $scope.item.subHeaders[e].span;
+        $scope.indexes.push(total);
+    });
+
     $scope.current = 'table';
     $scope.bookIcon = 'fa fa-star';
     $scope.viewerOptions = {
@@ -305,6 +342,12 @@ dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$l
     $scope.changeIcon = function () {
         $scope.bookIcon = 'icon-star';
     }
+    $scope.sort = function (header) {
+        var order = $scope.tableParams.isSortBy(header, 'asc') ? 'desc' : 'asc';
+        var obj = {};
+        obj[header] = order;
+        $scope.tableParams.sorting(obj);
+    }
     $scope.tableParams = new ngTableParams({
         page: 1,            // show first page
         count: 10          // count per page
@@ -312,11 +355,11 @@ dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$l
     }, {
         total: data.length, // length of data
         getData: function ($defer, params) {
-            // use build-in angular filter
-            //            var orderedData = params.sorting() ?
-            //                $filter('orderBy')(data, params.orderBy()) :
-            //                data;
-            $defer.resolve(data.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+//            use build-in angular filter
+            var orderedData = params.sorting() ?
+                $filter('orderBy')(data, params.orderBy()) :
+                data;
+            $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
         }
     });
 
@@ -329,6 +372,11 @@ dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$l
                 index * $scope.item.countPage
             );
         }
+    }
+    $scope.isDivider = function (index, header) {
+
+        var sort = $scope.tableParams.isSortBy(header, 'asc') ? 'sort-asc' : ($scope.tableParams.isSortBy(header, 'desc') ? 'sort-desc' : '');
+        return $scope.indexes.indexOf(index) != -1 ? 'header-divider ' + sort : sort;
     }
     $scope.previous = function () {
         if ($scope.item.currentPage > 1) {
@@ -367,24 +415,25 @@ dbModule.controller("QueryConfigController", ['$scope', '$routeParams', 'localSt
 
 
     $scope.$watch("limit", function (data) {
-        $scope.$parent.limit = data;
+        $scope.$parent.$parent.$parent.limit = data;
     });
     $scope.$watch("selectedContentType", function (data) {
-        $scope.$parent.selectedContentType = data;
+        $scope.$parent.$parent.$parent.selectedContentType = data;
     });
     $scope.$watch("shallow", function (data) {
-        $scope.$parent.shallow = data;
+        $scope.$parent.$parent.$parent.shallow = data;
         localStorageService.add("shallowCollection", data);
     });
     $scope.$watch("keepLimit", function (data) {
-        $scope.$parent.keepLimit = data;
+        $scope.$parent.$parent.$parent.keepLimit = data;
         localStorageService.add("keepLimit", data);
     });
     $scope.$watch("hideSettings", function (data) {
-        $scope.$parent.hideSettings = data;
+        $scope.$parent.$parent.$parent.hideSettings = data;
         localStorageService.add("hideSettings", data);
-        if ($scope.hide) {
-            $scope.hide();
+
+        if (!data && $scope.$parent.$hide) {
+            $scope.$parent.$hide();
         }
     });
     $scope.$parent.$watch("limit", function (data) {
@@ -450,20 +499,22 @@ dbModule.controller("BookmarkEditController", ['$scope', '$rootScope', 'Bookmark
     $scope.addBookmark = function () {
         Bookmarks.update(Database.getName(), $scope.bookmark).then(function () {
             $rootScope.$broadcast('bookmarks:changed');
-            $scope.hide();
+            $scope.$hide();
         });
     }
 }]);
-dbModule.controller("BookmarkController", ['$scope', 'Bookmarks', 'DocumentApi', 'Database', 'scroller', function ($scope, Bookmarks, DocumentApi, Database, scroller) {
+dbModule.controller("BookmarkController", ['$scope', 'Bookmarks', 'DocumentApi', 'Database', 'scroller', 'Aside', function ($scope, Bookmarks, DocumentApi, Database, scroller, Aside) {
 
 
-    $(document).bind("keypress", function (e) {
-        if ($scope.$parent.bookmarksClass == "show") {
-            $scope.$apply(function () {
-                $scope.closeIfReturn(e);
-            });
-        }
-    });
+//    $(document).bind("keydown", function (e) {
+//
+//        if ($scope.$parent.bookmarksClass == "show") {
+//            $scope.$apply(function () {
+//                $scope.closeIfReturn(e);
+//            });
+//        }
+//    });
+
     $scope.closeIfReturn = function (e) {
         if (e.keyCode == '27') {
             $scope.click();
@@ -480,10 +531,8 @@ dbModule.controller("BookmarkController", ['$scope', 'Bookmarks', 'DocumentApi',
         $scope.bks = data.result
     });
 
-    $scope.click = function () {
-
-        $scope.$parent.setBookClass();
-
+    $scope.isSelected = function (bk) {
+        return $scope.selected == bk ? '' : 'hide';
     }
     $scope.hover = function (bk) {
         $scope.selected = bk;
@@ -495,10 +544,18 @@ dbModule.controller("BookmarkController", ['$scope', 'Bookmarks', 'DocumentApi',
 
         $scope.cm.setValue($scope.queryText);
         $scope.cm.setCursor($scope.cm.lineCount());
-        $scope.$parent.setBookClass();
+        Aside.toggle();
     }
 
-    $scope.remove = function (r) {
+    $scope.stopProps = function ($event) {
+        if ($event) {
+            $event.stopPropagation();
+        }
+    }
+    $scope.remove = function (r, $event) {
+        if ($event) {
+            $event.stopPropagation();
+        }
         Bookmarks.remove(Database.getName(), r).then(function (data) {
             var idx = $scope.bks.indexOf(r);
             $scope.bks.splice(idx, 1);

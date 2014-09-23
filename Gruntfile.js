@@ -58,7 +58,7 @@ module.exports = function (grunt) {
       options: {
         port: 9000,
         // Change this to '0.0.0.0' to access the server from outside.
-        hostname: 'localhost'
+        hostname: '0.0.0.0'
       },
       proxies: [
           {
@@ -178,13 +178,13 @@ module.exports = function (grunt) {
           }
       },
       useminPrepare: {
-          html: ['<%= yeoman.app %>/index.html','<%= yeoman.app %>/views/ionic/appIframe.html'],
+          html: '<%= yeoman.app %>/index.html',
           options: {
               dest: '<%= yeoman.dist %>'
           }
       },
       usemin: {
-          html: ['<%= yeoman.dist %>/{,*/}*.html','<%= yeoman.dist %>/views/ionic/appIframe.html'],
+          html: ['<%= yeoman.dist %>/{,*/}*.html'],
           css: ['<%= yeoman.dist %>/styles/{,*/}*.css'],
           options: {
               dirs: ['<%= yeoman.dist %>']
@@ -226,7 +226,7 @@ module.exports = function (grunt) {
               files: [{
                   expand: true,
                   cwd: '<%= yeoman.app %>',
-                  src: ['*.html', '*.htm','views/{,*/,*/*/,*/*/*/}*.html','views/ionic/tpl/edit/*.html'],
+                  src: ['*.html', '*.htm','views/{,*/,*/*/}*.html'],
                   dest: '<%= yeoman.dist %>'
               }]
           }
@@ -281,10 +281,10 @@ module.exports = function (grunt) {
                       // 'components/**/*',
                       'img/{,*/}*.{gif,webp,png,jpg}',
                       'styles/{,*/}*.{png}',
-                      'font/*',
                       'fonts/*',
                       'data/**/*',
-                      'dist/**/*'
+                      'translations/**/*',
+                      'config/**/*'
                   ]
               }]
           }
@@ -320,14 +320,14 @@ module.exports = function (grunt) {
         //'compass:dist',
         'useminPrepare',
         //'imagemin',
-        // 'cssmin',
+        'cssmin',
         'htmlmin',
         'concat',
+        'ngmin',
         'copy',
-        // 'cdnify',
-        // 'ngmin',
-        // 'uglify',
-        // 'rev',
+        'cdnify',
+//        'uglify',
+//        'rev',
         'usemin'
     ]);
 

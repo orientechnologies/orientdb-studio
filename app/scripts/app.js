@@ -29,12 +29,15 @@ var deps = ['header.controller',
     'ui.select2',
     'ngRoute',
     'ngAnimate',
-    'angularSpectrumColorpicker'];
+    'angularSpectrumColorpicker',
+    'pascalprecht.translate',
+    'ngTagsInput',
+    'frapontillo.bootstrap-switch'];
 
 
 var App = angular.module('OrientDBStudioApp', deps);
 
-App.config(function ($routeProvider) {
+App.config(function ($routeProvider, $httpProvider, $translateProvider, $translatePartialLoaderProvider) {
     $routeProvider
         .when('/', {
             templateUrl: 'views/login.html',
@@ -53,7 +56,7 @@ App.config(function ($routeProvider) {
         .when('/database/:database/schema', {
             templateUrl: 'views/database/schema.html',
             controller: 'SchemaController',
-            resolve: DatabaseResolve
+            resolve: InstantDatabaseResolve
         })
         .when('/database/:database/schema/indexes', {
             templateUrl: 'views/database/index/indexMain.html',
@@ -70,7 +73,7 @@ App.config(function ($routeProvider) {
             controller: 'FunctionController',
             resolve: DatabaseResolve
         })
-        .when('/database/:database/users', {
+        .when('/database/:database/security', {
             templateUrl: 'views/database/security.html',
             controller: 'SecurityController',
             resolve: DatabaseResolve
@@ -103,12 +106,12 @@ App.config(function ($routeProvider) {
         .when('/database/:database/db', {
             templateUrl: 'views/database/configuration.html',
             controller: 'ConfigurationController',
-            resolve: DatabaseResolve
+            resolve: InstantDatabaseResolve
         })
         .when('/database/:database/db/:tab', {
             templateUrl: 'views/database/configuration.html',
             controller: 'ConfigurationController',
-            resolve: DatabaseResolve
+            resolve: InstantDatabaseResolve
         })
         .when('/database/:database/graph', {
             templateUrl: 'views/database/graph/graph.html',
@@ -139,4 +142,69 @@ App.config(function ($routeProvider) {
         .otherwise({
             redirectTo: '/'
         });
+
+    $translateProvider.useLoader('$translatePartialLoader', {
+        urlTemplate: 'translations/{lang}/{part}.json'
+    });
+
+    $translatePartialLoaderProvider.addPart('hint');
+
+    $translateProvider.preferredLanguage('en-US');
+    $httpProvider.interceptors.push(function ($q, Notification, $rootScope) {
+        return {
+            responseError: function (rejection) {
+
+
+                if (rejection.status == 0) {
+                    Notification.clear();
+                    $rootScope.$broadcast("server:down");
+
+                } else if (rejection.status == 401 && rejection.data != "Logged out") {
+                    Notification.push({content: rejection.data, error: true, autoHide: false});
+                }
+                return $q.reject(rejection);
+            }
+        };
+    });
+
 });
+App.run(function ($rootScope, $interval, DatabaseApi, Notification, Spinner, $templateCache, Aside) {
+    $rootScope.$on('$routeChangeSuccess', function (event, currentRoute, oldRoute) {
+        switch (currentRoute.templateUrl) {
+            case 'views/login.html':
+                $rootScope.bodyClass = 'landing-page';
+                break;
+            default:
+                $rootScope.bodyClass = 'normal-page';
+                break;
+        }
+        if (oldRoute && currentRoute.originalPath != oldRoute.originalPath) {
+            Notification.clear();
+        }
+        NProgress.done();
+    });
+    $rootScope.$on("$routeChangeStart", function (event, next, current) {
+        Aside.destroy();
+        NProgress.start();
+        NProgress.set(0.2);
+        NProgress.set(0.4);
+
+    })
+
+    $interval(function () {
+        DatabaseApi.listDatabases().then(function (data) {
+            $rootScope.$broadcast("server:up");
+        }, function error(data) {
+            $rootScope.$broadcast("server:down");
+        })
+    }, 10000);
+
+    $templateCache.put('popover/popover.tpl.html', '<div class="popover"><div class="arrow"></div><h3 class="popover-title" ng-bind="title" ng-show="title"></h3><div class="popover-content" ng-bind-html="content"></div></div>');
+})
+
+$('body').on('keyup', function (e) {
+
+    if (e.keyCode == 27) {
+        $('.modal-backdrop').click()
+    }
+})

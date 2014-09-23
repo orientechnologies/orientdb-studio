@@ -1,4 +1,4 @@
-<div class="modal" ng-controller="NewDatabaseController">
+<div class="modal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -7,8 +7,6 @@
                 <h3>New Database </h3>
             </div>
             <div class="modal-body edge">
-
-
                 <form id="signin" name="newDB" class="form-horizontal" novalidate="">
                     <fieldset>
                         <div class="form-group">
@@ -36,25 +34,40 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="control-label col-md-2">User</label>
+                            <label class="control-label col-md-2">Server User</label>
 
                             <div class="col-md-10">
-                                <input id="user" class="form-control" type="text" required ng-model="username"
+                                <input id="serverUser" class="form-control" type="text" required ng-model="username"
                                        value=""/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="control-label col-md-2">Password</label>
+                            <label class="control-label col-md-2">Server Password</label>
 
                             <div class="col-md-10">
-                                <input id="password" type="password" class="form-control" required ng-model="password"
+                                <input id="serverPassword" type="password" class="form-control" required
+                                       ng-model="password"
                                        value=""/>
                             </div>
 
                         </div>
                     </fieldset>
                 </form>
-
+                <div>
+                    You can find the server credentials in <br>$ORIENTDB_HOME/config/orientdb-server-config.xml file:
+                    <pre>&lt;users&gt;<br/>&nbsp;&nbsp;&lt;user name="root" password="pwd" resources="*" /&gt;<br/>&lt;/users&gt;
+                    </pre>
+                </div>
+                <div class="progress progress-striped active" ng-show="creating">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"
+                         aria-valuemax="100" style="width: 100%">
+                        <span class="progress-value">Creating database {{ name }}</span>
+                    </div>
+                </div>
+                <div class="alert alert-error" ng-show="error">
+                    <button type="button" class="close" ng-click="error = null">×</button>
+                    {{error}}
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn" ng-click="$hide()">Close</button>
@@ -64,3 +77,5 @@
         </div>
     </div>
 </div>
+
+

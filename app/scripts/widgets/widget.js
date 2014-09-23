@@ -288,6 +288,7 @@ Widget.directive('orientdate', function (Database) {
 
 
     return {
+        priority: 1001,
         restrict: 'A',
         require: 'ngModel',
         link: function (scope, element, attr, ngModel) {
@@ -301,18 +302,28 @@ Widget.directive('orientdate', function (Database) {
                         formatter = val.value;
                     }
                 });
+
                 var form = input;
                 if (input) {
-                    var form = moment(input, 'DD/MM/YYYY').format(formatter.toUpperCase());
+                    var form = moment(input).format(formatter.toUpperCase());
                 }
+
                 return form;
             }
 
             function out(data) {
+                var values = Database.getMetadata()['config']['values'];
+                var formatter = undefined;
+                values.forEach(function (val, idx, array) {
+                    if (val.name == 'dateFormat') {
+                        formatter = val.value;
+                    }
+                });
                 var form = data
                 if (data) {
-                    form = moment(data).format('DD/MM/YYYY');
+                    form = moment(data, formatter.toUpperCase()).toDate();
                 }
+
                 return form;
             }
 
@@ -372,7 +383,7 @@ Widget.directive('orientdatetime', function (Database) {
         }
     };
 });
-Widget.directive('ridrender', function (Database) {
+Widget.directive('ridrender', function (Database, $http, $compile) {
 
 
     return {
@@ -387,23 +398,58 @@ Widget.directive('ridrender', function (Database) {
                     element.html(link);
                 }
             }
-            if (value instanceof Array) {
-                var html = "<div class='rid-list'>";
-                var i = 0;
+            function isRids(value) {
+                return (value instanceof Array && value.length > 0 && typeof value[0] == "string" && value[0].indexOf('#') == 0 )
+
+            }
+
+            if (isRids(value)) {
+
+
+                var LIMIT = 5;
+                var PAGE = LIMIT;
                 var dbName = Database.getName();
 
-                value.forEach(function (elem) {
-                    if (typeof elem == 'string' && elem.indexOf('#') == 0) {
-                        var link = '<span class="label label-default badge-edge"><a href="#/database/' + dbName + '/browse/edit/' + elem.replace('#', '') + '">' + elem + '</a></span> ';
-                        html += link;
-                        i++;
-                    }
-                });
-                html += "</div>";
-                if (html != "" && i == value.length) {
-                    element.html(html);
+                scope.$new(true);
+
+                scope.expand = function () {
+                    PAGE += LIMIT;
+                    renderLimit(PAGE);
+                }
+                scope.collapse = function () {
+                    PAGE -= LIMIT;
+                    renderLimit(PAGE);
                 }
 
+                function renderLimit(limit) {
+                    var i = 0;
+                    var html = "<div class='rid-list'>";
+                    value.some(function (elem) {
+                        if (typeof elem == 'string' && elem.indexOf('#') == 0) {
+                            var link = '<span class="label label-warning badge-edge"><a href="#/database/' + dbName + '/browse/edit/' + elem.replace('#', '') + '">' + elem + '</a></span> ';
+                            html += link;
+
+                            if (i == PAGE) {
+                                scope.moreVal = value.length - PAGE;
+                                var expand = '<span class="label label-primary badge-edge"><a ng-click="expand()" href="javascript:void(0)">..More({{moreVal}})</a></span>';
+                                html += expand;
+                                return true;
+                            }
+                            i++;
+                            return false;
+                        }
+                        return false;
+                    });
+                    if (PAGE != LIMIT ) {
+                        var expand = '<span class="label label-primary badge-edge"><a ng-click="collapse()" href="javascript:void(0)">..Less</a></span>';
+                        html += expand;
+                    }
+                    html += "</div>";
+                    element.html('');
+                    element.html($compile(html)(scope));
+                }
+
+                renderLimit(LIMIT);
             }
         }
     };

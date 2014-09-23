@@ -37,12 +37,16 @@ GrapgController.controller("VertexModalController", ['$scope', '$routeParams', '
 GrapgController.controller("VertexEditController", ['$scope', '$injector', '$routeParams', '$location', '$modal', '$q', 'DocumentApi', 'Database', 'CommandApi', 'Notification', function ($scope, $injector, $routeParams, $location, $modal, $q, DocumentApi, Database, CommandApi, Notification) {
 
     $injector.invoke(BaseEditController, this, {$scope: $scope});
+    Database.setWiki("Edit-vertex.html");
     $scope.label = 'Vertex';
     $scope.fixed = Database.header;
     $scope.canSave = true;
     $scope.canDelete = true;
     $scope.canCreate = true;
     $scope.canAdd = true;
+    $scope.pageLimit = 10;
+    $scope.limitProof = 10;
+    $scope.limits = [];
     $scope.popover = {
         title: 'Add edge'
     }
@@ -52,7 +56,7 @@ GrapgController.controller("VertexEditController", ['$scope', '$injector', '$rou
         var modalScope = $scope.$new(true);
         modalScope.db = $scope.database;
         modalScope.rid = rid;
-        var modalPromise = $modal({template: 'views/database/modalEdit.html', persist: false, show: true, backdrop: 'static', scope: modalScope, modalClass: 'editEdge'});
+        var modalPromise = $modal({template: 'views/database/modalEdit.html', persist: false, show: true, scope: modalScope, modalClass: 'editEdge'});
 
     };
     $scope.showModalConnection = function (label) {
@@ -61,8 +65,16 @@ GrapgController.controller("VertexEditController", ['$scope', '$injector', '$rou
         modalScope.originRid = $scope.rid;
         modalScope.container = $scope;
         modalScope.label = label
-        var modalPromise = $modal({template: 'views/vertex/modalConnection.html', persist: false, show: true, backdrop: 'static', scope: modalScope, modalClass: 'createEdge'});
+        var modalPromise = $modal({template: 'views/vertex/modalConnection.html', persist: false, show: true, scope: modalScope, modalClass: 'createEdge'});
 
+    }
+    $scope.initLimits = function () {
+        $scope.incomings.forEach(function (i) {
+            $scope.limits[i] = $scope.pageLimit;
+        })
+        $scope.outgoings.forEach(function (i) {
+            $scope.limits[i] = $scope.pageLimit;
+        })
     }
     if (!$scope.doc) {
         $scope.reload();
@@ -76,8 +88,22 @@ GrapgController.controller("VertexEditController", ['$scope', '$injector', '$rou
 
         $scope.label = Database.isEdge($scope.doc['@class']) ? "Edge" : "Vertex";
 
+        $scope.initLimits();
     }
 
+
+    $scope.more = function (i) {
+        $scope.limits[i] += $scope.pageLimit;
+    }
+    $scope.less = function (i) {
+        $scope.limits[i] -= $scope.pageLimit;
+    }
+    $scope.isHideMore = function (i) {
+        return $scope.limits[i] >= $scope.doc[i].length;
+    }
+    $scope.isHideLess = function (i) {
+        return $scope.limits[i] == $scope.pageLimit;
+    }
     $scope.delete = function () {
         var recordID = $scope.doc['@rid']
         Utilities.confirm($scope, $modal, $q, {
@@ -93,7 +119,10 @@ GrapgController.controller("VertexEditController", ['$scope', '$injector', '$rou
         });
     }
 
-    $scope.filterArray = function (arr) {
+    $scope.filterArray = function (arr, i) {
+        if (!$scope.limits[i]) {
+            $scope.limits[i] = {};
+        }
         if (arr instanceof Array) {
             return arr;
         } else {
@@ -182,17 +211,17 @@ GrapgController.controller("VertexPopoverLabelController", ['$scope', '$routePar
 
 }]);
 
-GrapgController.controller("VertexModalBrowseController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'Icon', function ($scope, $routeParams, $location, Database, CommandApi, Icon) {
+GrapgController.controller("VertexModalBrowseController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'Icon', '$timeout', function ($scope, $routeParams, $location, Database, CommandApi, Icon, $timeout) {
 
     $scope.database = Database;
     $scope.limit = 20;
     $scope.queries = new Array;
     $scope.added = new Array;
+    $scope.loaded = true;
     $scope.editorOptions = {
         lineWrapping: true,
         lineNumbers: true,
         readOnly: false,
-        theme: 'ambiance',
         mode: 'text/x-sql',
         metadata: Database,
         extraKeys: {
@@ -202,9 +231,23 @@ GrapgController.controller("VertexModalBrowseController", ['$scope', '$routePara
                 });
             },
             "Ctrl-Space": "autocomplete"
+        },
+        onLoad: function (_cm) {
+            $scope.cm = _cm;
+
+            $scope.cm.on("change", function () { /* script */
+                var wrap = $scope.cm.getWrapperElement();
+                var approp = $scope.cm.getScrollInfo().height > 300 ? "300px" : "auto";
+                if (wrap.style.height != approp) {
+                    wrap.style.height = approp;
+                    $scope.cm.refresh();
+                }
+            });
+            $scope.cm.refresh();
         }
     };
     $scope.query = function () {
+
         CommandApi.queryText({database: $routeParams.database, language: 'sql', text: $scope.queryText, limit: $scope.limit, verbose: false }, function (data) {
             if (data.result) {
                 $scope.headers = Database.getPropertyTableFromResults(data.result);
@@ -212,6 +255,11 @@ GrapgController.controller("VertexModalBrowseController", ['$scope', '$routePara
             }
             if ($scope.queries.indexOf($scope.queryText) == -1)
                 $scope.queries.push($scope.queryText);
+        }, function err(data) {
+            $scope.error = data;
+            $timeout(function () {
+                $scope.error = null;
+            }, 2000);
         });
     }
     $scope.select = function (result) {
@@ -235,15 +283,28 @@ GrapgController.controller("VertexModalBrowseController", ['$scope', '$routePara
             $scope.container.reload();
         });
 
+
     }
+//    $timeout(function () {
+//        $scope.loaded = true;
+//    }, 2000);
 }]);
 
-GrapgController.controller("GraphController", ['$scope', '$routeParams', '$location', '$modal', '$q', 'Database', 'CommandApi', 'Spinner', 'Aside', 'DocumentApi', 'localStorageService', 'Graph', 'Icon', 'GraphConfig', 'Notification', function ($scope, $routeParams, $location, $modal, $q, Database, CommandApi, Spinner, Aside, DocumentApi, localStorageService, Graph, Icon, GraphConfig, Notification) {
+GrapgController.controller("GraphController", ['$scope', '$routeParams', '$location', '$modal', '$q', 'Database', 'CommandApi', 'Spinner', 'Aside', 'DocumentApi', 'localStorageService', 'Graph', 'Icon', 'GraphConfig', 'Notification', '$rootScope', function ($scope, $routeParams, $location, $modal, $q, Database, CommandApi, Spinner, Aside, DocumentApi, localStorageService, Graph, Icon, GraphConfig, Notification, $rootScope) {
 
 
     var data = [];
 
 
+    $scope.database = Database;
+    Database.setWiki("Graph-Editor.html")
+    $scope.dirty = false;
+    $rootScope.$on('graphConfig:changed', function (val) {
+        $scope.dirty = val;
+    })
+    $rootScope.$on('graphConfig:onSave', function (val) {
+        $scope.saveConfig();
+    })
     $scope.editorOptions = {
         lineWrapping: true,
         lineNumbers: true,
@@ -593,7 +654,7 @@ GrapgController.controller("GraphController", ['$scope', '$routeParams', '$locat
         modalScope.cancelSave = function () {
             $scope.graph.endEdgeCreation();
         }
-        $modal({template: 'views/database/modalNewEdge.html', persist: false, show: true, backdrop: 'static', scope: modalScope, modalClass: 'editEdge'});
+        $modal({template: 'views/database/modalNewEdge.html', persist: false, show: true, scope: modalScope, modalClass: 'editEdge'});
 
     };
     $scope.showModalNew = function () {
@@ -604,7 +665,7 @@ GrapgController.controller("GraphController", ['$scope', '$routeParams', '$locat
         modalScope.confirmSave = function (doc) {
             $scope.graph.data([doc]).redraw();
         }
-        $modal({template: 'views/database/modalNew.html', persist: false, show: true, backdrop: 'static', scope: modalScope, modalClass: 'editEdge'});
+        $modal({template: 'views/database/modalNew.html', persist: false, show: true, scope: modalScope, modalClass: 'editEdge'});
 
     };
     $scope.addNode = function () {
@@ -622,14 +683,14 @@ GrapgController.controller("GraphController", ['$scope', '$routeParams', '$locat
                 v.source = doc;
             }
         }
-        $modal({template: 'views/database/modalEdit.html', persist: false, show: true, backdrop: 'static', scope: modalScope, modalClass: 'editEdge'});
+        $modal({template: 'views/database/modalEdit.html', persist: false, show: true, scope: modalScope, modalClass: 'editEdge'});
 
     };
     $scope.saveConfig = function () {
         $scope.gConfig.config = $scope.graph.getConfig();
         GraphConfig.set($scope.gConfig).then(function (data) {
             $scope.gConfig = data;
-            Notification.push({content: 'Configuration Saved Correctly'});
+            Notification.push({content: 'Configuration Saved Correctly', autoHide: true});
         });
     }
     $scope.query = function () {
@@ -641,14 +702,13 @@ GrapgController.controller("GraphController", ['$scope', '$routeParams', '$locat
             $scope.language = 'sql';
         }
         CommandApi.queryText({database: $routeParams.database, contentType: 'JSON', language: $scope.language, text: $scope.queryText, limit: 20, shallow: false, verbose: false}, function (data) {
-
             if (data.result) {
-
                 $scope.graph.data(data.result).redraw();
             }
             Spinner.stopSpinner();
         }, function (data) {
             Spinner.stopSpinner();
+            Notification.push({content: data, error: true, autoHide: true});
         });
 
     }
@@ -659,7 +719,7 @@ GrapgController.controller("GraphController", ['$scope', '$routeParams', '$locat
     }
 }])
 ;
-GrapgController.controller("VertexAsideController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'Spinner', 'Aside', 'Icon', function ($scope, $routeParams, $location, Database, CommandApi, Spinner, Aside, Icon) {
+GrapgController.controller("VertexAsideController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'Spinner', 'Aside', 'Icon', '$rootScope', function ($scope, $routeParams, $location, Database, CommandApi, Spinner, Aside, Icon, $rootScope) {
 
 
     $scope.database = $routeParams.database;
@@ -677,6 +737,10 @@ GrapgController.controller("VertexAsideController", ['$scope', '$routeParams', '
         $scope.config = $scope.graph.getClazzConfig($scope.doc['@class']);
     }
 
+    $scope.setDirty = function () {
+        $rootScope.$broadcast('graphConfig:changed', true);
+
+    }
     $scope.$watch('config.display', function (val) {
         if (val) {
             $scope.graph.changeClazzConfig($scope.doc['@class'], 'icon', null);
@@ -713,6 +777,9 @@ GrapgController.controller("VertexAsideController", ['$scope', '$routeParams', '
         }
     })
 
+    $scope.save = function () {
+        $rootScope.$broadcast("graphConfig:onSave");
+    }
 
 }]);
 GrapgController.controller("EdgeAsideController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'Spinner', 'Aside', function ($scope, $routeParams, $location, Database, CommandApi, Spinner, Aside) {
@@ -720,6 +787,7 @@ GrapgController.controller("EdgeAsideController", ['$scope', '$routeParams', '$l
 
     $scope.database = $routeParams.database;
 
+    $scope.active = 'properties';
     if ($scope.doc) {
         $scope.headers = Database.getPropertyFromDoc($scope.doc);
         $scope.active = 'properties';
