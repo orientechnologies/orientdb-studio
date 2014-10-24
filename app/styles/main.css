@@ -720,6 +720,7 @@ ul.arrayrid > li {
 .bookmarks-list {
     padding-left: 5px;
     padding-right: 5px;
+    border-bottom: none;
 }
 
 .bookmarks-item {

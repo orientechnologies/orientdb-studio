@@ -145,7 +145,23 @@ body div.container-studio {
     transform: translateX(-320px);
     -ms-transform: translateX(-320px);
 }
+.oaside-body .list-group-item:hover {
+    background-color: #46484E !important;
+}
+.oaside-body .list-group-item {
+    background-color: #2E2F33 !important;
+    color: #DFE0E6 !important;
+    border-width: 0 0 2px;
+    transition: background-color 100ms ease-in-out 0s;
+    background-clip: padding-box;
+    border-style: none none solid;
+    cursor: pointer;
+    border-color: rgba(0, 0, 0, 0);
+}
 
+.oaside-body {
+ padding-top: 10px;
+}
 .oaside .close {
     color: #c5c5c5;
     opacity: .8;

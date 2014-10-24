@@ -116,10 +116,10 @@ builder.controller("AppBuilderController", function ($scope, $rootScope, $timeou
             $scope.app = app;
             appReady();
             initApp();
-            $scope.appPreview = "/dist/index.html?db=" + OApp.db;
+            $scope.appPreview = "../../dist/index.html?db=" + OApp.db;
         }, function (err) {
             initApp();
-            $scope.appPreview = "/dist/index.html?db=" + OApp.db;
+            $scope.appPreview = "../../dist/index.html?db=" + OApp.db;
         })
     }, 1000)
 

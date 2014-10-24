@@ -1,8 +1,6 @@
 {
-	"name" : "studio",
+	"name" : "marcopolo",
 	"version" : "1.7",
-	"description" : "Official OrientDB Studio tool",
-	"web" : "https://github.com/orientechnologies/orientdb-studio",
-	"copyrights" : "Orient Technologies LTD",
+	"description" : "Marco Polo",
 	"license" : "Apache 2"
 }
