@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Todo</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+
+    <style type=”text/css”>
+        .view-animate.ng-enter, .view-animate.ng-leave {
+            -webkit-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 1.5s;
+            transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 1.5s;
+
+            display:block;
+            width:100%;
+            border-left:1px solid black;
+
+            position:absolute;
+            top:0;
+            left:0;
+            right:0;
+            bottom:0;
+            padding:10px;
+        }
+
+        .view-animate.ng-enter {
+            left:100%;
+        }
+        .view-animate.ng-enter.ng-enter-active {
+            left:0;
+        }
+        .view-animate.ng-leave.ng-leave-active {
+            left:-100%;
+        }
+    </style>
+    <link href="css/ionic.min.css" rel="stylesheet">
+    <script src="script/ionic.bundle.min.js"></script>
+    <script src="script/angular-route.min.js"></script>
+    <script src="script/string.min.js"></script>
+    <script src="script/app.js"></script>
+    <script src="script/widget.js"></script>
+
+    <script type="application/javascript">
+
+        OApp = {}
+        OApp.db = getParameterByName("db");
+        OApp.url = '/';
+
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                    results = regex.exec(location.search);
+            return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+    </script>
+
+</head>
+<body ng-app="app">
+<div ng-view class="view-animate"></div>
+</body>
+</html>
