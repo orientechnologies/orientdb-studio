@@ -1,7 +1,11 @@
 var schemaModule = angular.module('function.controller', ['database.services']);
-schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'FunctionApi', 'DocumentApi', '$modal', '$q', '$route', 'Spinner', 'Notification', function ($scope, $routeParams, $location, Database, CommandApi, FunctionApi, DocumentApi, $modal, $q, $route, Spinner, Notification) {
+schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'FunctionApi', 'DocumentApi', '$modal', '$q', '$route', 'Spinner', 'Notification', 'Aside', '$rootScope', 'DatabaseApi', function ($scope, $routeParams, $location, Database, CommandApi, FunctionApi, DocumentApi, $modal, $q, $route, Spinner, Notification, Aside, $rootScope, DatabaseApi) {
 
     $scope.database = Database;
+    $scope.listClass = 'fa-mail-reply';
+    $scope.logLevel = ""
+    $scope.isCode = true;
+    $scope.isDirty = false;
     $scope.listClasses = $scope.database.listClasses();
     $scope.editorOptions = {
         lineWrapping: true,
@@ -16,10 +20,21 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
         },
         onLoad: function (_cm) {
             $scope.vcm = _cm;
-            $scope.createNewFunction();
+            //$scope.createNewFunction();
         }
     };
-    Database.setWiki("https://github.com/orientechnologies/orientdb-studio/wiki/Functions");
+
+    $scope.viewerOptions = {
+        lineWrapping: true,
+        lineNumbers: true,
+        readOnly: true,
+        mode: 'javascript',
+        onLoad: function (_cm) {
+            $scope.vcm = _cm;
+        }
+
+    };
+    Database.setWiki("Functions.html");
     $scope.functions = new Array;
 
     $scope.consoleValue = '';                           //code of the function
@@ -28,6 +43,9 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
     $scope.languages = ['SQL', 'Javascript'];
     $scope.functionToExecute = undefined;
 
+    DatabaseApi.getAvailableLanguages($routeParams.database).then(function (data) {
+        $scope.languages = data.languages;
+    })
     $scope.resultExecute = undefined;
     $scope.limit = -1;
     $scope.parametersToExecute = new Array;
@@ -40,6 +58,7 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
     $scope.getListFunction = function () {
         $scope.functions = new Array;
         $scope.functionsrid = new Array;
+        var deferred = $q.defer();
         CommandApi.queryText({database: $routeParams.database, language: 'sql', verbose: false, text: sqlText, limit: $scope.limit, shallow: false}, function (data) {
             if (data.result) {
                 for (i in data.result) {
@@ -47,31 +66,73 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
                     $scope.functionsrid.push(data.result[i]['name'])
                 }
 
-                if ($scope.functions.length > 0 && $scope.functionToExecute != undefined) {
+
+                if ($scope.functions.length > 0) {
+                    if ($scope.functionToExecute == undefined) {
+
+                        $scope.functionToExecute = $scope.functions[0];
+                    }
                     var index = $scope.functionsrid.indexOf($scope.functionToExecute['name']);
                     if (index != -1)
-                        $scope.showInConsoleAfterSave($scope.functions[index]);
+                        $scope.showInConsole($scope.functions[index]);
+                } else {
+                    $scope.createNewFunction();
                 }
+                deferred.resolve();
             }
+
         });
+        return deferred.promise;
 
     }
     $scope.clearConsole = function () {
         $scope.functionToExecute['code'] = '';
     }
-    $scope.getListFunction();
+    $scope.getListFunction().then(function () {
+        Aside.show({scope: $scope, title: "Functions", template: 'views/database/function/functionAside.html', show: true, absolute: false});
+    });
 
     $scope.removeParam = function (index) {
+
         if ($scope.functionToExecute != undefined) {
             var numPar = parseInt($scope.functionToExecute['parameters']);
-
             var result = numPar - 1;
-
             $scope.functionToExecute['parameters'].splice(index, 1);
-
+            $scope.parametersToExecute.splice(index, 1);
         }
         return result;
     }
+    $scope.showAllFunctions = function () {
+
+        Aside.toggle();
+
+    }
+    $rootScope.$on("aside:close", function () {
+        $scope.listClass = 'fa-mail-forward';
+    })
+    $rootScope.$on("aside:open", function () {
+        $scope.listClass = 'fa-mail-reply';
+    })
+
+    $scope.canSave = function (form) {
+
+        return !$scope.isDirty || form.$invalid;
+    }
+    $scope.$watch("functionToExecute.code", function (newVal, oldVal) {
+        if (oldVal && oldVal != newVal) {
+            $scope.isDirty = true;
+        }
+    })
+    $scope.$watch("functionToExecute.name", function (newVal, oldVal) {
+        if (oldVal && oldVal != newVal) {
+            $scope.isDirty = true;
+        }
+    })
+    $scope.$watchCollection("functionToExecute.parameters", function (newVal, oldVal) {
+        if (oldVal && oldVal != newVal) {
+            $scope.isDirty = true;
+        }
+    })
     $scope.copyFunction = function () {
         if ($scope.functionToExecute != undefined) {
 
@@ -91,48 +152,31 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
         if ($scope.functionToExecute['parameters'] == undefined) {
             $scope.functionToExecute['parameters'] = new Array;
         }
-
-
-        var app = JSON.parse(JSON.stringify($scope.parametersToExecute));
-
         $scope.functionToExecute['parameters'].push('');
-        $scope.inParams = $scope.functionToExecute['parameters'];
-
-        $scope.$watch('inParams.length', function (data) {
-            if (data) {
-                $scope.parametersToExecute = new Array(data);
-            }
-            else {
-
-                $scope.parametersToExecute = null;
-            }
-            var i;
-            for (i in app) {
-                $scope.parametersToExecute[i] = app[i];
-            }
-
-
-        });
+        $scope.parametersToExecute.push('');
     }
     $scope.
         executeFunction = function () {
         $scope.resultExecute = '';
 
         if ($scope.functionToExecute != undefined) {
-            var functionNamee = $scope.nameFunction;
-            var buildedParams = '';
-            for (i in $scope.parametersToExecute) {
-                buildedParams = buildedParams.concat($scope.parametersToExecute[i] + '/');
-            }
+            var encodedParams = new Array();
+            $scope.parametersToExecute.forEach(function (param) {
+                encodedParams.push(encodeURIComponent(param));
+            });
+            var buildedParams = encodedParams.join('/');
             Spinner.start();
             FunctionApi.executeFunction({database: $routeParams.database, functionName: $scope.nameFunction, parameters: buildedParams, limit: $scope.limit}, function (data) {
                 if (data.result) {
                     $scope.resultExecute = JSON.stringify(data.result);
                     Spinner.stopSpinner();
+
                 }
+                $scope.logLevel = "function-success-log";
                 Spinner.stopSpinner();
             }, function (error) {
                 $scope.resultExecute = error;
+                $scope.logLevel = "function-error-log";
                 Spinner.stopSpinner();
             });
         }
@@ -160,26 +204,24 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
     $scope.showInConsoleAfterSave = function (selectedFunction) {
         $scope.consoleValue = selectedFunction['code'];
         $scope.nameFunction = selectedFunction['name'];
-        $scope.selectedLanguage = selectedFunction['language'];
+        $scope.selectedLanguage = selectedFunction['language'] ? selectedFunction['language'].toLowerCase() : selectedFunction['language'];
         $scope.functionToExecute = selectedFunction;
-        $scope.inParams = $scope.functionToExecute['parameters'];
-        //$scope.vcm.setValue($scope.consoleValue != null ? $scope.consoleValue : "");
 
     }
 
+    $scope.selectFunction = function (selected) {
+        $scope.resultExecute = '';
+        $scope.logLevel = '';
+        $scope.showInConsole(selected);
+    }
     $scope.showInConsole = function (selectedFunction) {
 
         $scope.showInConsoleAfterSave(selectedFunction);
-        $scope.parametersToExecute = new Array;
-
-        $scope.$watch('inParams.length', function (data) {
-            if (data) {
-                $scope.parametersToExecute = new Array(data);
-            }
-            else {
-                $scope.parametersToExecute = null;
-            }
-        });
+        var size = 0;
+        if ($scope.functionToExecute['parameters']) {
+            size = $scope.functionToExecute['parameters'].length;
+        }
+        $scope.parametersToExecute = new Array(size);
 
 
         $scope.isNewFunction = false;
@@ -197,23 +239,33 @@ schemaModule.controller("FunctionController", ['$scope', '$routeParams', '$locat
     }
     $scope.saveFunction = function () {
         $scope.resultExecute = '';
+        $scope.logLevel = '';
         if ($scope.functionToExecute['language'] != undefined && $scope.functionToExecute['name'] != undefined && $scope.functionToExecute['name'] != '') {
             if ($scope.isNewFunction == true) {
 
-                DocumentApi.createDocument($scope.database.getName(), $scope.functionToExecute['@rid'], $scope.functionToExecute, function (data) {
-                        $scope.getListFunction();
-                        $scope.isNewFunction = false;
-                        var message = 'Function saved successfully. Server returns ' + JSON.stringify(data);
-                        Notification.push({content: message });
-                    }
-                );
+//                if ($scope.functionToExecute['language'] == 'javascript') {
+//                    $scope.functionToExecute['code'] = $scope.functionToExecute['code'].replace(/\//g, "\\/");
+//                }
+                DocumentApi.createDocument($scope.database.getName(), $scope.functionToExecute['@rid'], $scope.functionToExecute).then(function (data) {
+                    $scope.getListFunction();
+                    $scope.isNewFunction = false;
+                    var message = 'Function {{name}} saved successfully.';
+                    Notification.push({content: S(message).template({ name: $scope.functionToExecute['name']}).s, autoHide: true });
+                });
 
             }
             else {
-                DocumentApi.updateDocument($scope.database.getName(), $scope.functionToExecute['@rid'], $scope.functionToExecute, function (data) {
-                    $scope.getListFunction();
-                    var message = 'Function saved successfully. Server returns ' + JSON.stringify(data);
-                    Notification.push({content: message });
+//                if ($scope.functionToExecute['language'] == 'javascript') {
+//                    $scope.functionToExecute['code'] = $scope.functionToExecute['code'].replace(/\//g, "\\/");
+//                }
+                DocumentApi.updateDocument($scope.database.getName(), $scope.functionToExecute['@rid'], $scope.functionToExecute).then(function (data) {
+                    var oldParams = JSON.stringify($scope.parametersToExecute);
+                    $scope.getListFunction().then(function () {
+                        oldParams = JSON.parse(oldParams);
+                        $scope.parametersToExecute = oldParams;
+                    });
+                    var message = 'Function {{name}} saved successfully.';
+                    Notification.push({content: S(message).template({ name: $scope.functionToExecute['name']}).s, autoHide: true });
                 });
             }
         }

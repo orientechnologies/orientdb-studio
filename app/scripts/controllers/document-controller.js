@@ -2,18 +2,18 @@ var DocController = angular.module('document.controller', []);
 DocController.controller("DocumentEditController", ['$scope', '$injector', '$routeParams', '$location', '$modal', '$q', 'DocumentApi', 'Database', 'Notification', function ($scope, $injector, $routeParams, $location, $modal, $q, DocumentApi, Database, Notification) {
 
     $injector.invoke(BaseEditController, this, {$scope: $scope});
+    Database.setWiki("Edit-document.html");
     $scope.fixed = Database.header;
     $scope.canSave = true;
     $scope.canDelete = true;
     $scope.canCreate = true;
     $scope.canAdd = true;
-    Database.setWiki("https://github.com/orientechnologies/orientdb-studio/wiki/Edit-record");
     // Toggle modal
     $scope.showModal = function (rid) {
         modalScope = $scope.$new(true);
         modalScope.db = $scope.database;
         modalScope.rid = rid;
-        var modalPromise = $modal({template: 'views/document/modalEdit.html', persist: true, show: false, backdrop: 'static', modalClass: 'editEdge', scope: modalScope});
+        var modalPromise = $modal({template: 'views/document/modalEdit.html', persist: true, show: false, modalClass: 'editEdge', scope: modalScope});
         $q.when(modalPromise).then(function (modalEl) {
             modalEl.modal('show');
         });
@@ -54,10 +54,9 @@ DocController.controller("DocumentEditController", ['$scope', '$injector', '$rou
         modalScope.originRid = $scope.rid;
         modalScope.container = $scope;
         modalScope.label = label
-        var modalPromise = $modal({template: 'views/document/modalConnection.html', persist: true, show: false, backdrop: 'static', scope: modalScope, modalClass: 'createEdge'});
-        $q.when(modalPromise).then(function (modalEl) {
-            modalEl.modal('show');
-        });
+        var modalPromise = $modal({template: 'views/document/modalConnection.html', persist: true, show: true, scope: modalScope, modalClass: 'createEdge'});
+
+
     }
 }]);
 DocController.controller("DocumentCreateController", ['$scope', '$routeParams', '$location', 'DocumentApi', 'Database', 'Notification', function ($scope, $routeParams, $location, DocumentApi, Database, Notification) {
@@ -79,6 +78,8 @@ DocController.controller("DocumentCreateController", ['$scope', '$routeParams', 
 DocController.controller("DocumentModalController", ['$scope', '$routeParams', '$location', 'DocumentApi', 'Database', 'Notification', function ($scope, $routeParams, $location, DocumentApi, Database, Notification) {
 
     $scope.types = Database.getSupportedTypes();
+
+    $scope.database = $scope.db;
     $scope.reload = function () {
         $scope.doc = DocumentApi.get({ database: $scope.db, document: $scope.rid}, function () {
             $scope.headers = Database.getPropertyFromDoc($scope.doc);
@@ -87,10 +88,31 @@ DocController.controller("DocumentModalController", ['$scope', '$routeParams', '
             $location.path('/404');
         });
     }
+    $scope.showClass = function(){
+     $scope.$hide();
+    }
     $scope.save = function () {
-        DocumentApi.updateDocument($scope.db, $scope.rid, $scope.doc, function (data) {
-            Notification.push({content: data});
-        });
+
+        if ($scope.isNew) {
+            DocumentApi.createDocument($scope.db, $scope.doc['@rid'], $scope.doc, function (data) {
+                if ($scope.confirmSave) {
+                    $scope.confirmSave(data)
+                } else {
+                    Notification.push({content: JSON.stringify(data)});
+                    $location.path('#/database/' + $scope.db + '/browse/edit/' + data['@rid'].replace('#', ''));
+                }
+
+            });
+        } else {
+            DocumentApi.updateDocument($scope.db, $scope.rid, $scope.doc, function (data) {
+
+                if ($scope.confirmSave) {
+                    if ($scope.confirmSave(data));
+                } else {
+                    Notification.push({content: data});
+                }
+            });
+        }
 
     }
     $scope.addField = function (name, type) {
@@ -107,12 +129,66 @@ DocController.controller("DocumentModalController", ['$scope', '$routeParams', '
             $scope.headers.push(name);
         }
     }
+    $scope.setSelectClass = function (cls) {
+        $scope.doc = DocumentApi.createNewDoc(cls);
+        $scope.headers = Database.getPropertyFromDoc($scope.doc);
+        $scope.selectClass = false;
+    }
     $scope.deleteField = function (name) {
         delete $scope.doc[name];
         var idx = $scope.headers.indexOf(name);
         $scope.headers.splice(idx, 1);
     }
-    $scope.reload();
+    if (!$scope.doc && !$scope.isNew) {
+        $scope.selectClass = false;
+        $scope.reload();
+    } else {
+        $scope.selectClass = true;
+        $scope.listClasses = Database.getClazzVertex();
+        if ($scope.listClasses.length == 1) {
+            $scope.selectedClass = $scope.listClasses[0];
+        }
+
+    }
+
+}]);
+DocController.controller("DocumentModalEdgeController", ['$scope', '$routeParams', '$location', 'CommandApi', 'Database', 'Notification', '$controller', function ($scope, $routeParams, $location, CommandApi, Database, Notification, $controller) {
+
+    $controller('DocumentModalController', { $scope: $scope });
+    $scope.listClasses = Database.getClazzEdge();
+
+    if ($scope.listClasses.length == 1) {
+        $scope.selectedClass = $scope.listClasses[0];
+    }
+    $scope.lightweight = false;
+    $scope.save = function (cls) {
+
+        if (!cls) {
+            var cls = $scope.doc["@class"];
+            delete $scope.doc["@class"];
+            delete $scope.doc["@rid"];
+            delete $scope.doc["@version"];
+        }
+
+        var params = { label: cls, source: $scope.source["@rid"], target: $scope.target["@rid"], json: JSON.stringify($scope.doc)};
+        var command = "CREATE EDGE {{label}} FROM {{source}} TO {{target}}"
+        if (!cls) {
+            command += "content {{json}}";
+        }
+
+        var queryText = S(command).template(params).s;
+
+        CommandApi.queryText({database: $routeParams.database, language: 'sql', text: queryText, verbose: false}, function (data) {
+            $scope.confirmSave(data.result);
+        });
+    }
+    $scope.createLightEdge = function (cls) {
+        $scope.save(cls);
+        $scope.$hide();
+    }
+    $scope.showEdgeForm = function () {
+        return $scope.selectClass && !$scope.lightweight;
+    }
 }]);
 DocController.controller("EditController", ['$scope', '$routeParams', '$location', 'DocumentApi', 'Database', 'Notification', function ($scope, $routeParams, $location, DocumentApi, Database, Notification) {
 
@@ -128,7 +204,7 @@ DocController.controller("EditController", ['$scope', '$routeParams', '$location
 
 
 }]);
-DocController.controller("CreateController", ['$scope', '$routeParams', '$location', 'DocumentApi', 'Database', 'Notification', function ($scope, $routeParams, $location, DocumentApi, Database, Notification) {
+DocController.controller("CreateController", ['$scope', '$routeParams', '$location', 'DocumentApi', 'Database', 'Notification', '$timeout', function ($scope, $routeParams, $location, DocumentApi, Database, Notification, $timeout) {
 
     var database = $routeParams.database;
     var clazz = $routeParams.clazz
@@ -139,7 +215,7 @@ DocController.controller("CreateController", ['$scope', '$routeParams', '$locati
     $scope.template = Database.isGraph(clazz) ? 'views/database/editVertex.html' : 'views/database/editDocument.html'
 
 }]);
-DocController.controller("DocumentModalBrowseController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', function ($scope, $routeParams, $location, Database, CommandApi) {
+DocController.controller("DocumentModalBrowseController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', '$timeout', function ($scope, $routeParams, $location, Database, CommandApi, $timeout) {
 
     $scope.database = Database;
     $scope.limit = 20;
@@ -150,7 +226,6 @@ DocController.controller("DocumentModalBrowseController", ['$scope', '$routePara
         lineWrapping: true,
         lineNumbers: true,
         readOnly: false,
-        theme: 'ambiance',
         mode: 'text/x-sql',
         metadata: Database,
         extraKeys: {
@@ -160,16 +235,34 @@ DocController.controller("DocumentModalBrowseController", ['$scope', '$routePara
                 });
             },
             "Ctrl-Space": "autocomplete"
+        },
+        onLoad: function (_cm) {
+            $scope.cm = _cm;
+
+            $scope.cm.on("change", function () { /* script */
+                var wrap = $scope.cm.getWrapperElement();
+                var approp = $scope.cm.getScrollInfo().height > 300 ? "300px" : "auto";
+                if (wrap.style.height != approp) {
+                    wrap.style.height = approp;
+                    $scope.cm.refresh();
+                }
+            });
+            $scope.cm.refresh();
         }
     };
     $scope.query = function () {
-        CommandApi.queryText({database: $routeParams.database, language: 'sql', text: $scope.queryText, limit: $scope.limit}, function (data) {
+        CommandApi.queryText({database: $routeParams.database, language: 'sql', text: $scope.queryText, limit: $scope.limit, verbose: false }, function (data) {
             if (data.result) {
                 $scope.headers = Database.getPropertyTableFromResults(data.result);
                 $scope.results = data.result;
             }
             if ($scope.queries.indexOf($scope.queryText) == -1)
                 $scope.queries.push($scope.queryText);
+        }, function err(data) {
+            $scope.error = data;
+            $timeout(function () {
+                $scope.error = null;
+            }, 2000);
         });
     }
     $scope.select = function (result) {
@@ -193,24 +286,24 @@ DocController.controller("DocumentModalBrowseController", ['$scope', '$routePara
 DocController.controller("DocumentPopoverLinkController", ['$scope', '$routeParams', '$location', 'DocumentApi', 'Database', 'Notification', function ($scope, $routeParams, $location, DocumentApi, Database, Notification) {
 
 
-    $scope.addLink = function () {
-        if ($scope['outgoings'].indexOf($scope.popover.name) == -1) {
+    $scope.addLink = function (name) {
+        if ($scope['outgoings'].indexOf(name) == -1) {
 
-            $scope['outgoings'].push($scope.popover.name);
+            $scope['outgoings'].push(name);
             var types = $scope.doc['@fieldTypes']
             if (types) {
-                types = types + ',' + $scope.popover.name + '=e'
+                types = types + ',' + name + '=e'
             } else {
-                types = $scope.popover.name + '=e';
+                types = name + '=e';
             }
             $scope.doc['@fieldTypes'] = types;
         }
-        delete $scope.popover.name;
     }
 
 }]);
 function BaseEditController($scope, $routeParams, $route, $location, $modal, $q, DocumentApi, Database, Notification, CommandApi) {
     $scope.database = $routeParams.database;
+    $scope.dbWiki = Database;
     $scope.rid = $routeParams.rid;
     $scope.label = 'Document';
 
@@ -303,10 +396,8 @@ function BaseEditController($scope, $routeParams, $route, $location, $modal, $q,
             var modalScope = $scope.$new(true);
             modalScope.addField = $scope.addField;
             modalScope.types = Database.getSupportedTypes();
-            var modalPromise = $modal({template: 'views/database/newField.html', persist: true, show: false, backdrop: 'static', scope: modalScope});
-            $q.when(modalPromise).then(function (modalEl) {
-                modalEl.modal('show');
-            });
+            var modalPromise = $modal({template: 'views/database/newField.html', persist: true, show: true, scope: modalScope});
+
         }
 
     }

@@ -1,24 +1,27 @@
-<div class="row-fluid" ng-controller="BookmarkNewController">
+<div class="popover">
 
-    <div class="span12" ng-if="viewTags">
-        <form class="">
-            <fieldset>
-                <label>Name</label>
-                <input type="text" class="input-large" ng-model="bookmark.name"/>
-                <label>Category</label>
+    <h3 class="popover-title" ng-bind-html="title" ng-show="title"></h3>
 
-                <input type="hidden" ng-model="bookmark.tags" ui-select2="select2Options" class="input-large"
+    <div class="popover-content" ng-controller="BookmarkNewController">
+
+        <form ng-if="viewTags">
+            <div class="form-group">
+                <label class=" control-label">Name</label>
+                <input type="text" class="form-control" ng-model="bookmark.name"/>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Category</label>
+
+
+                <input type="hidden" ng-model="bookmark.tags" ui-select2="select2Options"
+
                        data-placeholder="Pick a tag">
-
                 </input>
-
-
-            </fieldset>
+            </div>
             <div class="form-actions">
-                <button type="button" class="btn" ng-click="cancel();hide()">Cancel</button>
-                <button class="btn btn-primary" ng-click="addBookmark()">Done</button>
+                <button type="button" class="btn btn-sm" ng-click="cancel();$hide()">Cancel</button>
+                <button class="btn btn-primary btn-sm" ng-click="addBookmark()">Done</button>
             </div>
         </form>
     </div>
-
 </div>

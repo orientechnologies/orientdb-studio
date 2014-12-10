@@ -9,20 +9,23 @@
 var configModule = angular.module('configuration.controller', []);
 configModule.controller("ConfigurationController", ['$scope', '$routeParams', '$location', 'DatabaseApi', 'Database', function ($scope, $routeParams, $location, DatabaseApi, Database) {
 
+    $scope.database = Database;
     $scope.active = $routeParams.tab || "structure";
     $scope.db = $routeParams.database;
-    $scope.tabs = ['structure', 'allocation', 'configuration', 'import-export', 'uml'];
+    $scope.tabs = ['structure', 'configuration', 'import-export'];
 
     $scope.tabsI18n = new Array;
 
-    if ($scope.active == "allocation") {
-        Database.setWiki("https://github.com/orientechnologies/orientdb-studio/wiki/Defragmentation");
+    if ($scope.active == "structure") {
+        Database.setWiki("Structure.html");
     }
-    else {
-        Database.setWiki("https://github.com/orientechnologies/orientdb-studio/wiki/Uml");
+
+    else if ($scope.active == "configuration") {
+        Database.setWiki("Configuration.html");
+    } else if ($scope.active == "import-export") {
+        Database.setWiki("Export-Import.html");
     }
     $scope.tabsI18n['structure'] = 'Structure';
-    $scope.tabsI18n['allocation'] = 'Defragmentation';
     $scope.tabsI18n['configuration'] = 'Configuration';
     $scope.tabsI18n['import-export'] = 'Export';
     $scope.tabsI18n['uml'] = 'UML Class Diagram';
@@ -164,24 +167,56 @@ configModule.controller("UMLController", ['$scope', '$routeParams', '$location',
 
 }]);
 
-configModule.controller("StructureController", ['$scope', '$routeParams', '$location', 'DatabaseApi', 'Database', function ($scope, $routeParams, $location, DatabaseApi, Database) {
+configModule.controller("StructureController", ['$scope', '$routeParams', '$location', 'DatabaseApi', 'Database', 'ClusterAlterApi', "Notification", function ($scope, $routeParams, $location, DatabaseApi, Database, ClusterAlterApi, Notification) {
 
     $scope.clusters = Database.getMetadata()['clusters'];
+    $scope.conflictStrategies = ['version', 'content', 'automerge']
     $scope.dataSegments = Database.getMetadata()['dataSegments'];
     $scope.txSegments = Database.getMetadata()['txSegment'];
 
+    $scope.links = {
+        linkConflictStrategy: Database.getOWikiFor("SQL-Alter-Cluster.html")
+    }
+    $scope.version = Database.getVersion();
 
+    $scope.changeStrategy = function (cluster) {
+
+        ClusterAlterApi.changeProperty(Database.getName(), { cluster: cluster.name, name: "conflictStrategy", value: cluster.conflictStrategy}).then(function () {
+            Notification.push({content: "Conflict strategy for cluster '" + cluster.name + "' changed in '" + cluster.conflictStrategy + "'."});
+        });
+    }
 }]);
-configModule.controller("DbConfigController", ['$scope', '$routeParams', '$location', 'DatabaseApi', 'Database', 'DatabaseAlterApi', 'Notification', function ($scope, $routeParams, $location, DatabaseApi, Database, DatabaseAlterApi, Notification) {
+configModule.controller("DbConfigController", ['$scope', '$routeParams', '$location', 'DatabaseApi', 'Database', 'DatabaseAlterApi', 'Notification', '$q', function ($scope, $routeParams, $location, DatabaseApi, Database, DatabaseAlterApi, Notification, $q) {
 
 
     $scope.values = Database.getMetadata()['config']['values'];
+    $scope.properties = Database.getMetadata()['config']['properties'];
 
-    $scope.canChange = ["clusterSelection", "minimumClusters"];
-    $scope.changeTemplate = { clusterSelection: "views/database/config/clusterSelection.html"}
+    $scope.links = {
+        useLightweightEdges: Database.getOWikiFor("Tutorial-Working-with-graphs.html#lightweight-edges"),
+        clusterSelection: Database.getOWikiFor("SQL-Alter-Database.html"),
+        minimumClusters: Database.getOWikiFor("SQL-Alter-Database.html"),
+        conflictStrategy: Database.getOWikiFor("SQL-Alter-Database.html")
+    }
+
+
+    var found = false;
+    $scope.properties.forEach(function (val) {
+        if (val.name == 'useLightweightEdges') {
+            found = true;
+        }
+    });
+    if (!found) {
+        $scope.properties.push({name: 'useLightweightEdges', value: 'true' });
+    }
+
+    $scope.canChange = ["clusterSelection", "minimumClusters", "localeCountry", "useLightweightEdges", "conflictStrategy"];
+    $scope.changeTemplate = { clusterSelection: "views/database/config/clusterSelection.html", useLightweightEdges: "views/database/config/boolenaCustom.html", conflictStrategy: "views/database/config/conflictStrategy.html"}
     $scope.dirty = [];
+    $scope.customDirty = [];
     $scope.clusterStrategies = ['round-robin', "default", "balanced"];
 
+    $scope.conflictStrategies = ['version', 'content', 'automerge']
     $scope.isDisabledVal = function (val) {
         return $scope.canChange.indexOf(val.name) == -1
     }
@@ -190,15 +225,32 @@ configModule.controller("DbConfigController", ['$scope', '$routeParams', '$locat
         if ($scope.dirty.indexOf(val) == -1)
             $scope.dirty.push(val);
     }
+    $scope.setCustomDirty = function (val) {
+        if ($scope.customDirty.indexOf(val) == -1)
+            $scope.customDirty.push(val);
+    }
     $scope.getRender = function (val) {
         var tpl = $scope.changeTemplate[val.name];
         return tpl ? tpl : "views/database/config/default.html";
     }
+    $scope.getCustomRender = function (val) {
+        var tpl = $scope.changeTemplate[val.name];
+        return tpl ? tpl : "views/database/config/defaultCustom.html";
+    }
     $scope.save = function () {
+        var promises = []
         $scope.dirty.forEach(function (val) {
-            DatabaseAlterApi.changeProperty(Database.getName(), val).then(function (data) {
-                Notification.push({content: "Configuration Saved."});
-            });
+            var p = DatabaseAlterApi.changeProperty(Database.getName(), val);
+            promises.push(p);
+        });
+        $scope.customDirty.forEach(function (val) {
+            var p = DatabaseAlterApi.changeCustomProperty(Database.getName(), val);
+            promises.push(p);
+        });
+        $q.all(promises).then(function () {
+            Notification.push({content: "Configuration Saved."});
+        }, function (err) {
+            Notification.push({content: err, error: true});
         });
     }
 

@@ -58,7 +58,7 @@ module.exports = function (grunt) {
       options: {
         port: 9000,
         // Change this to '0.0.0.0' to access the server from outside.
-        hostname: 'localhost'
+        hostname: '0.0.0.0'
       },
       proxies: [
           {
@@ -166,6 +166,9 @@ module.exports = function (grunt) {
           }
       },
       concat: {
+          options : {
+            sourceMap : true
+          },
           dist: {
               files: {
                   '<%= yeoman.dist %>/scripts/scripts.js': [
@@ -280,9 +283,11 @@ module.exports = function (grunt) {
                       '../plugin.json',
                       // 'components/**/*',
                       'img/{,*/}*.{gif,webp,png,jpg}',
-                      'styles/{,*/}*.{png}',
-                      'font/*',
-                      'data/**/*'
+                      'styles/{,*/}*.{png,ttf,woff,eot}',
+                      'fonts/*',
+                      'data/**/*',
+                      'translations/**/*',
+                      'config/**/*'
                   ]
               }]
           }
@@ -318,14 +323,14 @@ module.exports = function (grunt) {
         //'compass:dist',
         'useminPrepare',
         //'imagemin',
-        // 'cssmin',
+        'cssmin',
         'htmlmin',
         'concat',
+        'ngmin',
         'copy',
-        // 'cdnify',
-        // 'ngmin',
-        // 'uglify',
-        // 'rev',
+        'cdnify',
+//      'uglify',
+//        'rev',
         'usemin'
     ]);
 

@@ -19,12 +19,34 @@ var DatabaseResolve = {
         return delay.promise;
     }
 }
+var InstantDatabaseResolve = {
+    current: function (Database, $q, $route, $location, Spinner) {
+        var deferred = $q.defer();
+        Database.refreshMetadata($route.current.params.database, function () {
+            deferred.resolve();
+        })
+        return deferred.promise;
+    },
+    delay: function ($q, $timeout) {
+        var delay = $q.defer();
+        $timeout(delay.resolve, 0);
+        return delay.promise;
+    }
+}
 database.factory('Database', function (DatabaseApi, localStorageService) {
+
+
+    var version = STUDIO_VERSION.indexOf("SNAPSHOT") == -1 ? STUDIO_VERSION : "last";
+    var wikiBase = 'http://www.orientechnologies.com/docs/' + version + "/orientdb-studio.wiki/";
+    var oWikiBase = 'http://www.orientechnologies.com/docs/' + version + "/orientdb.wiki/";
     var current = {
         name: null,
         username: null,
         metadata: null,
-        wiki: "https://github.com/orientechnologies/orientdb-studio/wiki"
+        wiki: wikiBase,
+        oWiki: oWikiBase,
+        version: version
+
     }
     return {
 
@@ -49,7 +71,7 @@ database.factory('Database', function (DatabaseApi, localStorageService) {
             return current.wiki;
         },
         setWiki: function (urlWiki) {
-            current.wiki = urlWiki;
+            current.wiki = wikiBase + urlWiki;
         },
         getMappingFor: function (type) {
             return this.mapping[type];
@@ -101,6 +123,7 @@ database.factory('Database', function (DatabaseApi, localStorageService) {
                 error();
             });
         },
+
         disconnect: function (callback) {
             DatabaseApi.disconnect(function () {
                 delete current.name;
@@ -222,7 +245,6 @@ database.factory('Database', function (DatabaseApi, localStorageService) {
                     var props = classes[entry]['indexes'];
                     for (var f in props) {
 
-
                         fields.push(props[f]);
                     }
                     ;
@@ -318,6 +340,7 @@ database.factory('Database', function (DatabaseApi, localStorageService) {
         isVertex: function (clazz) {
             var sup = clazz;
             var iterator = clazz;
+
             while ((iterator = this.getSuperClazz(iterator)) != "") {
                 sup = iterator;
             }
@@ -338,6 +361,18 @@ database.factory('Database', function (DatabaseApi, localStorageService) {
             for (var entry in classes) {
                 var name = classes[entry]['name'];
                 if (this.isEdge(name)) {
+                    clazzes.push(name);
+                }
+            }
+            return clazzes;
+        },
+        getClazzVertex: function () {
+            var metadata = this.getMetadata();
+            var classes = metadata['classes'];
+            var clazzes = new Array;
+            for (var entry in classes) {
+                var name = classes[entry]['name'];
+                if (this.isVertex(name)) {
                     clazzes.push(name);
                 }
             }
@@ -425,9 +460,13 @@ database.factory('Database', function (DatabaseApi, localStorageService) {
         getPropertyTableFromResults: function (results) {
             var self = this;
             var headers = new Array;
+            var temp = false;
             results.forEach(function (element, index, array) {
                 var tmp = Object.keys(element);
                 if (headers.length == 0) {
+                    if (element["@rid"] && element["@rid"].startsWith('#-')) {
+                        temp = true;
+                    }
                     headers = headers.concat(tmp);
                 } else {
                     var tmp2 = tmp.filter(function (element, index, array) {
@@ -439,22 +478,58 @@ database.factory('Database', function (DatabaseApi, localStorageService) {
             var all = headers.filter(function (element, index, array) {
                 return self.exclude.indexOf(element) == -1;
             });
+            if (temp) {
+                if (all.indexOf("@rid") != -1)
+                    all.splice(all.indexOf("@rid"), 1)
+                if (all.indexOf("@version") != -1)
+                    all.splice(all.indexOf("@version"), 1)
+
+            }
             return all;
+        },
+        getVersion: function () {
+            return current.version;
+        },
+        getOWikiFor: function (page) {
+            return current.oWiki + page;
         }
 
     };
 });
 
-database.factory('DatabaseApi', function ($http, $resource) {
+database.factory('DatabaseApi', function ($http, $resource, $q) {
 
 
     var urlWiki = "https://github.com/orientechnologies/orientdb-studio/wiki/Functions";
 
     var resource = $resource(API + 'database/:database');
     resource.listDatabases = function (callback) {
-        $http.get(API + 'listDatabases').success(callback);
+        var deferred = $q.defer();
+        $http.get(API + 'listDatabases').success(function (data) {
+            if (callback) {
+                callback(data);
+            }
+            else {
+                deferred.resolve(data);
+            }
+        }).error(function (data) {
+                deferred.reject(data);
+            });
+        return deferred.promise;
     }
 
+    resource.install = function (db, username, password) {
+        var deferred = $q.defer();
+        delete $http.defaults.headers.common['Authorization'];
+        $http.defaults.headers.common['Authorization'] = 'Basic ' + Base64.encode(username + ':' + password);
+
+        $http.post(API + 'installDatabase', db.url).success(function (data) {
+            deferred.resolve(data);
+        }).error(function (data) {
+                deferred.reject(data);
+            })
+        return deferred.promise;
+    }
     resource.setUrlWiki = function (urll) {
         urlWiki = urll;
     }
@@ -476,7 +551,17 @@ database.factory('DatabaseApi', function ($http, $resource) {
                 error(data);
             });
     }
-
+    resource.deleteDatabase = function (name, username, password) {
+        var deferred = $q.defer();
+        delete $http.defaults.headers.common['Authorization'];
+        $http.defaults.headers.common['Authorization'] = 'Basic ' + Base64.encode(username + ':' + password);
+        $http.delete(API + 'database/' + name).success(function (data) {
+            deferred.resolve(data);
+        }).error(function (data) {
+                deferred.reject(data);
+            })
+        return deferred.promise;
+    }
     resource.exportDatabase = function (database) {
         window.open(API + 'export/' + database);
     }
@@ -487,6 +572,17 @@ database.factory('DatabaseApi', function ($http, $resource) {
     }
     resource.getAllocation = function (database, callback) {
         $http.get(API + 'allocation/' + database).success(callback);
+    }
+    resource.getAvailableLanguages = function (database) {
+        var deferred = $q.defer();
+
+        $http.get(API + 'supportedLanguages/' + database).success(function (data) {
+            deferred.resolve(data);
+        }).error(function (err) {
+                deferred.reject(err)
+                ''
+            });
+        return deferred.promise;
     }
     resource.disconnect = function (callback) {
         $http.get(API + 'disconnect').success(function () {
@@ -509,7 +605,7 @@ database.factory('CommandApi', function ($http, $resource, Notification, Spinner
         var startTime = new Date().getTime();
         var limit = params.limit || 20;
         var verbose = params.verbose != undefined ? params.verbose : true;
-        var shallow = params.shallow ? ',shallow' : '';
+        var shallow = ''; //disabled shallow params.shallow ? ',shallow' :
         var contentType = params.contentType || 'application/json';
         //rid,type,version,class,attribSameRow,indent:2,dateAsLong,shalow,graph
         var text = API + 'command/' + params.database + "/" + params.language + "/-/" + limit + '?format=rid,type,version' + shallow + ',class,graph';
@@ -549,6 +645,7 @@ database.factory('CommandApi', function ($http, $resource, Notification, Spinner
 
         else {
             if (params.text) {
+
                 var query = params.text.trim();
                 var config = {headers: {"accept": contentType}};
                 $http.post(text, query, config).success(function (data) {
@@ -570,7 +667,12 @@ database.factory('CommandApi', function ($http, $resource, Notification, Spinner
                     }
 
                 }).error(function (data) {
-                        Notification.push({content: data, error: true});
+                        if (verbose) {
+                            Notification.push({content: data, error: true});
+                        }
+                        if (!verbose && !error) {
+                            Notification.push({content: data, error: true});
+                        }
                         if (error) error(data);
                     });
             }
@@ -596,11 +698,24 @@ database.factory('CommandApi', function ($http, $resource, Notification, Spinner
     return resource;
 })
 ;
-database.factory('DocumentApi', function ($http, $resource, Database) {
+database.factory('DocumentApi', function ($http, $resource, Database, $q) {
 
     var resource = $resource(API + 'document/:database/:document');
     resource.updateDocument = function (database, rid, doc, callback) {
-        $http.put(API + 'document/' + database + "/" + rid.replace('#', ''), doc).success(callback).error(callback);
+        var deferred = $q.defer()
+        $http.put(API + 'document/' + database + "/" + rid.replace('#', ''), doc).success(function (data) {
+            if (callback) {
+                callback(data)
+            }
+            deferred.resolve(data);
+        }).error(function (data) {
+                if (callback) {
+                    callback(data)
+                }
+                deferred.reject(data);
+            });
+        return deferred.promise;
+
     }
     resource.uploadFileDocument = function (database, doc, blob, name, callback) {
 
@@ -612,10 +727,38 @@ database.factory('DocumentApi', function ($http, $resource, Database) {
         //$http.put(API + 'document/' + database + "/" + rid.replace('#',''),doc,{headers: { 'Content-Type': undefined }}).success(callback).error(callback);
     }
     resource.createDocument = function (database, rid, doc, callback) {
-        $http.post(API + 'document/' + database + "/" + rid.replace('#', ''), doc).success(callback).error(callback);
+        var deferred = $q.defer()
+        $http.post(API + 'document/' + database + "/" + rid.replace('#', ''), doc).success(function (data) {
+
+            if (callback) {
+                callback(data)
+            }
+            deferred.resolve(data);
+        }).error(function (data) {
+                if (callback) {
+                    callback(data)
+                }
+                deferred.reject(data);
+            });
+        return deferred.promise;
     }
     resource.deleteDocument = function (database, rid, callback) {
-        $http.delete(API + 'document/' + database + "/" + rid.replace('#', '')).success(callback).error(callback);
+        var deferred = $q.defer()
+        $http.delete(API + 'document/' + database + "/" + rid.replace('#', '')).success(function (data) {
+            if (callback) {
+                callback(data);
+            }
+            deferred.resolve(data);
+        }).error(function (data) {
+                if (callback) {
+                    callback(data);
+                }
+                deferred.reject(data);
+            });
+        return deferred.promise;
+    }
+    resource.isNew = function (doc) {
+        return doc['@rid'] == '#-1:-1';
     }
     resource.createNewDoc = function (clazz) {
         var r = new resource
@@ -679,12 +822,14 @@ database.factory('FunctionApi', function ($http, $resource, Notification) {
             var time = ((new Date().getTime() - startTime) / 1000);
             var records = data.result ? data.result.length : "";
             if (verbose) {
-                var noti = "Query executed in " + time + " sec. Returned " + records + " record(s)";
-                Notification.push({content: noti});
+                var noti = "Function " + params.functionName + " executed in " + time + " sec. ";
+                Notification.push({content: noti, autoHide: true});
             }
             callback(data);
         }).error(function (data) {
-                Notification.push({content: data});
+                if (verbose) {
+                    Notification.push({content: "Error executing function " + params.functionName + ".", error: true, autoHide: true});
+                }
                 if (error) error(data);
             });
     }
@@ -702,6 +847,19 @@ database.factory('DatabaseAlterApi', function ($http, $resource, $q) {
         var deferred = $q.defer();
         var text = API + 'command/' + database + '/sql/-/-1?format=rid,type,version,class,graph';
         var query = "alter database {{name}} {{value}}"
+        var queryText = S(query).template(props).s;
+        $http.post(text, queryText).success(function (data) {
+            deferred.resolve(data)
+        }).error(function (data) {
+                deferred.reject(data);
+            });
+        return deferred.promise;
+    }
+    resource.changeCustomProperty = function (database, props) {
+
+        var deferred = $q.defer();
+        var text = API + 'command/' + database + '/sql/-/-1?format=rid,type,version,class,graph';
+        var query = "alter database custom {{name}} = {{value}}"
         var queryText = S(query).template(props).s;
         $http.post(text, queryText).success(function (data) {
             deferred.resolve(data)
@@ -733,3 +891,46 @@ database.factory('ClassAlterApi', function ($http, $resource, $q) {
     }
     return resource
 });
+database.factory('PropertyAlterApi', function ($http, $resource, $q) {
+
+
+    var resource = $resource('function/:database');
+
+
+    resource.changeProperty = function (database, props) {
+
+        var deferred = $q.defer();
+        var text = API + 'command/' + database + '/sql/-/-1?format=rid,type,version,class,graph';
+        var query = "alter property {{clazz}}.{{property}} {{name}} {{value}}"
+        var queryText = S(query).template(props).s;
+        $http.post(text, queryText).success(function (data) {
+            deferred.resolve(data)
+        }).error(function (data) {
+                deferred.reject(data);
+            });
+        return deferred.promise;
+    }
+    return resource
+});
+database.factory('ClusterAlterApi', function ($http, $resource, $q) {
+
+
+    var resource = $resource('');
+
+
+    resource.changeProperty = function (database, props) {
+
+        var deferred = $q.defer();
+        var text = API + 'command/' + database + '/sql/-/-1?format=rid,type,version,class,graph';
+        var query = "alter cluster {{cluster}} {{name}} {{value}}"
+        var queryText = S(query).template(props).s;
+        $http.post(text, queryText).success(function (data) {
+            deferred.resolve(data)
+        }).error(function (data) {
+                deferred.reject(data);
+            });
+        return deferred.promise;
+    }
+    return resource
+});
+
