@@ -30,7 +30,7 @@ Unpack the **studio.zip** file inside the directory "www/studio" in OrientDB Ser
 3. Install local dependencies:
 
     ```bash
-    $ npm install
+    $ npm install # might be necessary to be run with sudo depending on whether the dependencies have been installed with sudo or not
     $ bower install
     ```
 
