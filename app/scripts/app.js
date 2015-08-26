@@ -167,6 +167,17 @@ App.config(function ($routeProvider, $httpProvider, $translateProvider, $transla
 
   $translatePartialLoaderProvider.addPart('hint');
 
+  var checkError401 = function (data) {
+
+    var valid = true;
+    if (typeof  data == 'string') {
+      valid = data != "Logged out";
+    } else {
+      valid = data.errors[0].content != "Logged out"
+    }
+    return valid;
+
+  }
   $translateProvider.preferredLanguage('en-US');
   $httpProvider.interceptors.push(function ($q, Notification, $rootScope) {
     return {
@@ -177,7 +188,7 @@ App.config(function ($routeProvider, $httpProvider, $translateProvider, $transla
           Notification.clear();
           $rootScope.$broadcast("server:down");
 
-        } else if (rejection.status == 401 && rejection.data != "Logged out") {
+        } else if (rejection.status == 401 && checkError401(rejection.data)) {
           Notification.push({content: rejection.data, error: true, autoHide: false});
         }
         return $q.reject(rejection);
