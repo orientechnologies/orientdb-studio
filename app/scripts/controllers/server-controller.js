@@ -253,10 +253,12 @@ ctrl.controller('SingleServerController', function ($scope, $rootScope, $locatio
 
   function initParamenters(realtime) {
     if (realtime) {
+      var availableMemory = realtime['hookValues']['process.runtime.availableMemory'];
       var maxMemory = realtime['hookValues']['process.runtime.maxMemory'];
       var totalMemory = realtime['hookValues']['process.runtime.totalMemory'];
 
-      $scope.ramPercent = Math.floor(((totalMemory * 100) / maxMemory));
+
+      $scope.ramPercent = Math.floor(((availableMemory * 100) / maxMemory));
       $scope.anotherPercent = -45;
       $scope.ramOptions = {
         barColor: '#E67E22',
