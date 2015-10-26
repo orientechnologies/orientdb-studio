@@ -1,5 +1,5 @@
 var dbModule = angular.module('database.controller', ['database.services', 'bookmarks.services']);
-dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'localStorageService', 'Spinner', '$modal', '$q', '$window', 'Bookmarks', 'Notification', 'Aside', 'BrowseConfig', '$timeout', 'GraphConfig', 'BatchApi', function ($scope, $routeParams, $location, Database, CommandApi, localStorageService, Spinner, $modal, $q, $window, Bookmarks, Notification, Aside, BrowseConfig, $timeout, GraphConfig, BatchApi) {
+dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'localStorageService', 'Spinner', '$modal', '$q', '$window', 'Bookmarks', 'Notification', 'Aside', 'BrowseConfig', '$timeout', 'GraphConfig', 'BatchApi','DocumentApi', function ($scope, $routeParams, $location, Database, CommandApi, localStorageService, Spinner, $modal, $q, $window, Bookmarks, Notification, Aside, BrowseConfig, $timeout, GraphConfig, BatchApi,DocumentApi) {
 
   $scope.database = Database;
   $scope.limit = 20;
@@ -14,12 +14,14 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
   if (Database.hasClass(GraphConfig.CLAZZ)) {
     GraphConfig.get().then(function (data) {
       $scope.graphConfig = data;
+      Bookmarks.getAll(Database.getName());
     })
   } else {
     GraphConfig.init().then(function () {
       var newCfg = DocumentApi.createNewDoc(GraphConfig.CLAZZ);
       GraphConfig.set(newCfg).then(function (data) {
         $scope.graphConfig = data;
+        Bookmarks.getAll(Database.getName());
       })
     });
   }
@@ -51,13 +53,6 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
   }
 
 
-  if (Database.hasClass(Bookmarks.CLAZZ)) {
-    Bookmarks.getAll(Database.getName());
-  } else {
-    Bookmarks.init(Database.getName()).then(function () {
-      Bookmarks.getAll(Database.getName());
-    });
-  }
 
   $scope.hideSettings = $scope.config.get("hideSettings");
 
