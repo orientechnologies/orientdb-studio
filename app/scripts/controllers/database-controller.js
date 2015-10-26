@@ -11,9 +11,18 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
   ];
 
 
-  GraphConfig.get().then(function (data) {
-    $scope.graphConfig = data;
-  })
+  if (Database.hasClass(GraphConfig.CLAZZ)) {
+    GraphConfig.get().then(function (data) {
+      $scope.graphConfig = data;
+    })
+  } else {
+    GraphConfig.init().then(function () {
+      var newCfg = DocumentApi.createNewDoc(GraphConfig.CLAZZ);
+      GraphConfig.set(newCfg).then(function (data) {
+        $scope.graphConfig = data;
+      })
+    });
+  }
   Aside.show({
     scope: $scope,
     title: "Bookmarks",
@@ -410,8 +419,8 @@ dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$l
     var link = '#/database/' + dbName + '/schema/editclass/' + value.replace('#', '');
     return link
   }
-  $scope.otherwise = function (doc,value, header) {
-    return !$scope.isRid(value) && !$scope.isRids(value) && !$scope.isClass(header) && !$scope.isBinary(doc,header);
+  $scope.otherwise = function (doc, value, header) {
+    return !$scope.isRid(value) && !$scope.isRids(value) && !$scope.isClass(header) && !$scope.isBinary(doc, header);
   }
   $scope.isBinary = function (doc, header) {
     var t = Database.findTypeFromFieldTipes(doc, header)
