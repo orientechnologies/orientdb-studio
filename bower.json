@@ -52,6 +52,8 @@
     "angular-translate": "2.2.0",
     "angular-motion": "^0.3.3",
     "codemirror": "4.5.0",
-    "angular-mocks": "~1.0.5"
+    "angular-mocks": "~1.0.5",
+    "angular-ui-bootstrap-bower": "0.10.0",
+    "font-awesome": "4.4.0"
   }
 }
