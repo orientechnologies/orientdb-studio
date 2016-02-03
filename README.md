@@ -1,4 +1,4 @@
-Look to the [Documentation](http://www.orientechnologies.com/docs/last/orientdb-studio.wiki/Home-page.html) for more information.
+Look to the [Documentation](http://orientdb.com/docs/last/Home-page.html) for more information.
 
 ## Users
 #### OrientDB v1.6 or major
