@@ -240,26 +240,26 @@
 
               </thead>
               <tbody>
-              <tr ng-repeat="index in indexes track by $index|  orderBy:'name'">
+              <tr ng-repeat="idx in indexes  |  orderBy:'name'">
                 <td>
-                  {{index.name}}
+                  {{idx.name}}
                 </td>
                 <td>
-                  {{index.type}}
+                  {{idx.type}}
                 </td>
                 <td>
-                  {{index.fields}}
+                  {{idx.fields}}
                 </td>
                 <td>
-                  {{getEngine(index)}}
+                  {{getEngine(idx)}}
                 </td>
                 <td>
                   <button href="javascript:void(0)" class="btn btn-default btn-xs"
-                          ng-click="rebuildIndex(index.name)">
+                          ng-click="rebuildIndex(idx.name)">
                     <i class="fa fa-refresh"></i> Rebuild
                   </button>
                   <button href="javascript:void(0)" class="btn btn-danger btn-xs"
-                          ng-click="dropIndex(index)">
+                          ng-click="dropIndex(idx)">
                     <i class="fa fa-trash-o"></i> Drop
                   </button>
 

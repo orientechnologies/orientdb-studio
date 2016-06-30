@@ -1,10 +1,9 @@
 'use strict';
 
 // EXTERNAL DEPS
-import angular from 'angular';
 import 'jquery';
-import 'ng-table';
-import AngularStrap from 'angular-strap';
+import angular from 'angular';
+import  'angular-strap';
 import 'angular-local-storage';
 import 'angular-scroll';
 import 'angular-animate';
@@ -16,17 +15,21 @@ import  'angular-translate-loader-partial';
 import 'ng-tags-input';
 import 'angular-bootstrap-switch';
 import 'angular-smart-table';
+import 'ng-table';
+import 'd3';
+import 'spectrum-colorpicker';
+import 'angular-spectrum-colorpicker';
 
 
-
-import AngularStrapTpl from 'angular-strap/dist/angular-strap.tpl';
-import Bootstrap from 'bootstrap';
+import  'angular-strap/dist/angular-strap.tpl';
+import  'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'font-awesome/css/font-awesome.css';
 import  'codemirror/theme/ambiance.css';
 import  'codemirror/lib/codemirror.css';
 import  'codemirror/addon/hint/show-hint.css';
 import  'codemirror/addon/dialog/dialog.css';
+import  'spectrum-colorpicker/spectrum.css'
 
 // CONFIG
 import routing from './app.config'
@@ -39,7 +42,7 @@ import NProgress from 'nprogress';
 import HeaderController from './controllers/header-controller'
 import LoginController from './controllers/login-controller'
 import DatabaseController from './controllers/database-controller'
-import DocumentController from './controllers/document-controller'
+import {CtrlName as DocumentController} from './controllers/document-controller'
 import ServerController from './controllers/server-controller'
 import VertexController from './controllers/graph-controller'
 import FunctionController from './controllers/function-controller'

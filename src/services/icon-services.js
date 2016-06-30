@@ -1,6 +1,6 @@
 import { API,STUDIO_VERSION } from '../constants';
 
-var icon = angular.module('icon.services', []);
+let icon = angular.module('icon.services', []);
 
 icon.factory('Icon', function ($http, $q, $timeout) {
 
@@ -31,3 +31,6 @@ icon.factory('Icon', function ($http, $q, $timeout) {
 
     return icons;
 });
+
+
+export default icon.name;

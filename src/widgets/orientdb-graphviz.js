@@ -3,7 +3,10 @@
  * (c) 2010-2014 Orient Technologies, Ltd.
  * License: MIT
  */
-var OrientGraph = (function () {
+
+import '../styles/orientdb-graphviz.css';
+
+let OrientGraph = (function () {
 
   var graph = {};
 
@@ -238,7 +241,7 @@ var OrientGraph = (function () {
       this.force.tick = function () {
 
         var startTick = now()
-        step = mst
+        let step = mst
         while (step-- && (now() - startTick < mtct)) {
           if (tick()) {
             mst = 2
@@ -548,13 +551,13 @@ var OrientGraph = (function () {
         .text(bindLabel).on("click", function (e) {
 
 
-          d3.event.stopPropagation();
-          self.edgeMenu.select({elem: this, d: e})
+        d3.event.stopPropagation();
+        self.edgeMenu.select({elem: this, d: e})
 
-          if (self.topics['edge/click']) {
-            self.topics['edge/click'](e);
-          }
-        });
+        if (self.topics['edge/click']) {
+          self.topics['edge/click'](e);
+        }
+      });
 
       this.path.exit().remove();
 
@@ -980,7 +983,7 @@ var OrientGraph = (function () {
 
   function OVertex(graph, elem) {
 
-    if (elem instanceof  Object) {
+    if (elem instanceof Object) {
       this["@rid"] = elem['@rid'];
       this.loaded = true;
     } else {
@@ -1063,8 +1066,7 @@ var OrientGraph = (function () {
           return d.children ? "end" : "start";
         })
         .attr("class", "more-text")
-        .
-        attr("dy", 5)
+        .attr("dy", 5)
         .attr("dx", 1)
         .text(function (d) {
           return d.label ? d.label.replace("in_", "").replace("out_", "") : null;
@@ -1787,3 +1789,5 @@ var OrientGraph = (function () {
   }
   return graph;
 })();
+
+export  default OrientGraph;

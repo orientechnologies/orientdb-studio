@@ -1,4 +1,13 @@
-var GrapgController = angular.module('vertex.controller', []);
+
+import Icons from  '../services/icon-services';
+var GrapgController = angular.module('vertex.controller', [Icons]);
+
+
+import { BaseEditController } from './document-controller';
+
+import '../views/vertex/addLabel.html';
+import '../views/database/modalNew.html';
+
 GrapgController.controller("VertexCreateController", ['$scope', '$routeParams', '$location', 'DocumentApi', 'Database', 'Notification', function ($scope, $routeParams, $location, DocumentApi, Database, Notification) {
 
 

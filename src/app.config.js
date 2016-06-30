@@ -8,8 +8,11 @@ import './views/notification.html';
 import './views/widget/aside.html';
 import './views/status.html';
 import './translations/en-US/hint.json';
-import './views/database/browse.html';
 
+import './views/database/schema.html';
+import './views/database/browse.html';
+import './views/database/security.html';
+import './views/database/graph/graph.html';
 
 
 

@@ -1,10 +1,18 @@
+
+import '../views/widget/form.html';
+import '../views/widget/link.html';
+import '../views/widget/short.html';
+import '../views/widget/string.html';
+
+
 var Widget = angular.module('rendering', []);
 
 
-Widget.directive('docwidget', function ($compile, $http, Database, CommandApi, DocumentApi, $timeout) {
+
+Widget.directive('docwidget', function ($compile, $http, Database, CommandApi, DocumentApi, $timeout,$templateCache) {
 
 
-  var compileForm = function (response, scope, element, attrs) {
+  var compileForm = function (tpl, scope, element, attrs) {
     var formScope = scope.$new(true);
     formScope.doc = scope.doc;
     formScope.database = scope.database;
@@ -115,7 +123,7 @@ Widget.directive('docwidget', function ($compile, $http, Database, CommandApi, D
       }
 
     });
-    var el = angular.element($compile(response.data)(formScope));
+    var el = angular.element($compile(tpl)(formScope));
     element.empty();
     element.append(el);
   }
@@ -155,9 +163,13 @@ Widget.directive('docwidget', function ($compile, $http, Database, CommandApi, D
   var linker = function (scope, element, attrs) {
 
     var url = attrs.docwidget ? attrs.docwidget : "views/widget/form.html"
-    $http.get(url).then(function (response) {
-      compileForm(response, scope, element, attrs);
-    });
+
+
+    var data = $templateCache.get(url);
+    compileForm(data, scope, element, attrs);
+    //$http.get(url).then(function (response) {
+    //
+    //});
   }
   return {
     // A = attribute, E = Element, C = Class and M = HTML Comment

@@ -475,4 +475,7 @@ DocController.controller("EmbeddedController", ['$scope', '$ojson', function ($s
 
 }]);
 
-export default DocController.name ;
+const CtrlName = DocController.name;
+export  {CtrlName, BaseEditController};
+
+

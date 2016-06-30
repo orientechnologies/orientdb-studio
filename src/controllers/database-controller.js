@@ -1,17 +1,21 @@
 import databaseServices from '../services/database-services';
+import angular from 'angular';
+
 
 import BookmarkServices from '../services/bookmark-services';
 import BrowseConfig from '../services/browse-services';
+import Graph from '../services/graph-services';
+import Utilities from '../util/library'
 
 import '../views/database/browseConfig.html';
 import '../views/database/bookmark.html';
 import '../views/hints/query-hint.html';
-import '../views/database/context/bookmarksAside.html';
+import BookmarkAside from  '../views/database/context/bookmarksAside.html';
 import '../views/database/query.html';
 
 
 
-var dbModule = angular.module('database.controller', [databaseServices, BookmarkServices,BrowseConfig]);
+let dbModule = angular.module('database.controller', [databaseServices, BookmarkServices,BrowseConfig,Graph]);
 dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'localStorageService', 'Spinner', '$modal', '$q', '$window', 'Bookmarks', 'Notification', 'Aside', 'BrowseConfig', '$timeout', 'GraphConfig', 'BatchApi', 'DocumentApi', function ($scope, $routeParams, $location, Database, CommandApi, localStorageService, Spinner, $modal, $q, $window, Bookmarks, Notification, Aside, BrowseConfig, $timeout, GraphConfig, BatchApi, DocumentApi) {
 
   $scope.database = Database;
@@ -41,7 +45,7 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
   Aside.show({
     scope: $scope,
     title: "Bookmarks",
-    template: 'views/database/context/bookmarksAside.html',
+    template: BookmarkAside,
     show: false,
     absolute: true
   });
@@ -370,7 +374,7 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$location', 
 
 
 }]);
-dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$location', 'Database', 'CommandApi', 'localStorageService', 'Spinner', 'ngTableParams', 'scroller', '$ojson', 'Graph', 'ngTableEventsChannel', function ($scope, $routeParams, $filter, $location, Database, CommandApi, localStorageService, Spinner, ngTableParams, scroller, $ojson, Graph, ngTableEventsChannel) {
+dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$location', 'Database', 'CommandApi', 'localStorageService', 'Spinner', 'NgTableParams', '$document', '$ojson', 'Graph', 'ngTableEventsChannel', function ($scope, $routeParams, $filter, $location, Database, CommandApi, localStorageService, Spinner, ngTableParams, $document, $ojson, Graph, ngTableEventsChannel) {
 
 
   $scope.itemByPage = 10;
@@ -540,7 +544,7 @@ dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$l
       $scope.config.selectedRequestLanguage = $scope.item.selectedRequestLanguage;
     }
 
-    scroller.scrollTo(0, 0, 2000);
+    $document.scrollTo(0, 0, 2000);
     $scope.cm.focus();
 
     $scope.cm.setValue($scope.queryText);
@@ -550,7 +554,7 @@ dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$l
 
   $scope.changeLimit = function () {
     $scope.queryText = $scope.item.query;
-    scroller.scrollTo(0, 0, 2000);
+    $document.scrollTo(0, 0, 2000);
     $scope.cm.setValue($scope.queryText);
     $scope.cm.setCursor($scope.cm.lineCount());
 
@@ -655,7 +659,7 @@ dbModule.controller("BookmarkEditController", ['$scope', '$rootScope', 'Bookmark
     });
   }
 }]);
-dbModule.controller("BookmarkController", ['$scope', 'Bookmarks', 'DocumentApi', 'Database', 'scroller', 'Aside', function ($scope, Bookmarks, DocumentApi, Database, scroller, Aside) {
+dbModule.controller("BookmarkController", ['$scope', 'Bookmarks', 'DocumentApi', 'Database', '$document', 'Aside', function ($scope, Bookmarks, DocumentApi, Database, $document, Aside) {
 
 
   $scope.closeIfReturn = function (e) {
@@ -688,7 +692,7 @@ dbModule.controller("BookmarkController", ['$scope', 'Bookmarks', 'DocumentApi',
     if (r.selectedRequestLanguage) {
       $scope.config.selectedRequestLanguage = r.selectedRequestLanguage;
     }
-    scroller.scrollTo(0, 0, 2000);
+    $document.scrollTo(0, 0, 2000);
     $scope.cm.focus();
 
     $scope.cm.setValue($scope.queryText);

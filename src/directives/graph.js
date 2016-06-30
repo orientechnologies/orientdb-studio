@@ -1,4 +1,6 @@
-var graph = angular.module('graph', []);
+import OrientGraph from '../widgets/orientdb-graphviz';
+
+let graph = angular.module('graph', []);
 
 
 graph.directive('ngGraphQuery', function () {
@@ -128,7 +130,7 @@ graph.directive('ngOGraph', function () {
     link: linker
   }
 });
-graph.directive('aside', function ($http, $compile) {
+graph.directive('aside', function ($http, $compile, $templateCache) {
 
   var linker = function (scope, element, attrs) {
 
@@ -137,13 +139,13 @@ graph.directive('aside', function ($http, $compile) {
 
 
       if (s) {
-        $http.get(scope.model.tpl).then(function (response) {
-          var el = angular.element($compile(response.data)(scope.model.scope));
-          element.empty();
-          element.append(el);
-          scope.model.loading = false;
-        });
 
+
+        var data = $templateCache.get(scope.model.tpl)
+        var el = angular.element($compile(data)(scope.model.scope));
+        element.empty();
+        element.append(el);
+        scope.model.loading = false;
 
       }
     })

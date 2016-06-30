@@ -1,3 +1,4 @@
+import  '../views/database/context/bookmarksAside.html';
 
 import AsideServices from '../services/aside-services';
 var aside = angular.module('aside.controller', [AsideServices]);
@@ -26,10 +27,10 @@ aside.controller("AsideManagerController", ['$scope', '$routeParams', '$http', '
     }
   })
 
-  $rootScope.$on('servermgmt:open',function(){
+  $rootScope.$on('servermgmt:open', function () {
     $scope.containerClass = "app-view";
   })
-  $rootScope.$on('servermgmt:close',function(){
+  $rootScope.$on('servermgmt:close', function () {
     $scope.containerClass = "";
   })
   $rootScope.$on('aside:close', function () {

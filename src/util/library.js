@@ -1,3 +1,5 @@
+import '../views/modal/yesno.html';
+
 if (!String.prototype.startsWith) {
     Object.defineProperty(String.prototype, 'startsWith', {
         enumerable: false,
@@ -37,4 +39,6 @@ Utilities.confirm = function ($scope, $modal, $q, params) {
 
     }
 }
+
+export  default Utilities;
 

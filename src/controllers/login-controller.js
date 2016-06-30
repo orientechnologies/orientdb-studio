@@ -1,5 +1,6 @@
 
 import databaseServices from '../services/database-services'
+import angular from 'angular';
 
 
 var login = angular.module('login.controller', [databaseServices]);

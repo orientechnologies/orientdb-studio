@@ -1,5 +1,12 @@
+import '../views/database/security/users.html';
+import '../views/database/security/roles.html';
+import '../views/database/users/newRole.html';
+import '../views/database/users/newRule.html';
+import '../views/database/users/newUser.html';
 
-var schemaModule = angular.module('users.controller', ['database.services']);
+import Utilities from '../util/library';
+
+let schemaModule = angular.module('users.controller', ['database.services']);
 
 
 schemaModule.controller("SecurityController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'FunctionApi', 'DocumentApi', '$modal', '$q', '$route', function ($scope, $routeParams, $location, Database, CommandApi, FunctionApi, DocumentApi, $modal, $q, $route) {
@@ -17,7 +24,7 @@ schemaModule.controller("SecurityController", ['$scope', '$routeParams', '$locat
     return 'views/database/security/' + tab + '.html';
   }
 }]);
-schemaModule.controller("UsersController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', '$modal', '$q', '$route', '$filter', 'ngTableParams', 'DocumentApi', 'Notification', function ($scope, $routeParams, $location, Database, CommandApi, $modal, $q, $route, $filter, ngTableParams, DocumentApi, Notification) {
+schemaModule.controller("UsersController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', '$modal', '$q', '$route', '$filter', 'NgTableParams', 'DocumentApi', 'Notification', function ($scope, $routeParams, $location, Database, CommandApi, $modal, $q, $route, $filter, ngTableParams, DocumentApi, Notification) {
 
   $scope.database = Database;
   $scope.usersResult = new Array;
@@ -58,11 +65,11 @@ schemaModule.controller("UsersController", ['$scope', '$routeParams', '$location
 
       }, {
         total: $scope.usersResult.length, // length of data
-        getData: function ($defer, params) {
+        getData: function (params) {
           var orderedData = params.sorting() ?
             $filter('orderBy')($scope.usersResult, params.orderBy()) :
             $scope.usersResult;
-          $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+          return orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
         }
       });
     });
@@ -395,7 +402,7 @@ schemaModule.controller("RolesController", ['$scope', '$routeParams', '$location
       DecToBin = '0'.concat(DecToBin);
     }
     var matrix = new Array;
-    for (z in DecToBin) {
+    for (let z in DecToBin) {
       if (z != 'contains')
         matrix.push(DecToBin[z] == '1')
     }

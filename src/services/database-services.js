@@ -685,13 +685,15 @@ database.factory('CommandApi', function ($http, $resource, Notification, Spinner
           var time = ((new Date().getTime() - startTime) / 1000);
           var records = data.result ? data.result.length : "";
 
-          var noti = "Query executed in " + time + " sec. Returned " + records + " record(s)";
+          let notification = "Query executed in " + time + " sec. Returned " + records + " record(s)";
           if (verbose) {
-            Notification.push({content: noti});
+            Notification.push({content: notification});
           }
 
           if (data != undefined) {
-            data.notification = noti;
+
+            //console.log(data);
+            data.notification = notification;
             callback(data);
           }
           else {
