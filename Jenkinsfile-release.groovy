@@ -10,7 +10,7 @@ node("master") {
     stage('Run tests on Java8') {
         docker.image("${mvnJdk8Image}").inside("${env.VOLUMES}") {
 
-            sh "${mvnHome}/bin/mvn  versions:set -DnewVersion=2.2.15"
+            sh "${mvnHome}/bin/mvn  versions:set -DnewVersion=${env.RELEASE_VERSION}"
             sh "${mvnHome}/bin/mvn  versions:commit"
             sh "${mvnHome}/bin/mvn  clean install deploy -DperformRelease=true -DskipTests=true -DcreateChecksum=true -Psonatype"
 
