@@ -10,6 +10,32 @@
     <artifactId>orientdb-studio</artifactId>
     <version>2.2.15-SNAPSHOT</version>
 
+    <name>OrientDB Studio</name>
+    <description>OrientDB Studio - web interface for OrientDB server</description>
+    <url>http://www.orientdb.com</url>
+
+    <organization>
+        <name>OrientDB</name>
+        <url>https://orientdb.com</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>Apache 2</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:orientechnologies/orientdb-studio.git</connection>
+        <developerConnection>scm:git:git@github.com:orientechnologies/orientdb-studio.git</developerConnection>
+        <url>scm:git:git@github.com:orientechnologies/orientdb-studio.git</url>
+    </scm>
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/orientechnologies/orientdb-studio/issues</url>
+    </issueManagement>
+
+
     <distributionManagement>
         <repository>
             <id>sonatype-nexus-staging</id>
