@@ -58,8 +58,7 @@ import 'fullcalendar/dist/fullcalendar.min.css';
 import 'angular-motion/dist/angular-motion.min.css';
 
 
-import {APP_DECLARATIONS} from './app/app.declarations';
-import {APP_RESOLVER_PROVIDERS} from './app/app.resolver';
+
 
 // Bundled Vendor
 
@@ -243,27 +242,27 @@ $('body').on('keyup', function (e) {
 })
 
 
-let AppModule = NgModule({
-  imports: [BrowserModule, UpgradeModule, HttpModule],
-  providers: [...APP_RESOLVER_PROVIDERS],
-  declarations: [...APP_DECLARATIONS],
-  entryComponents: [...APP_DECLARATIONS]
-}).Class({
-  constructor: function () {
-  },
-  ngDoBootstrap: () => {
-
-  }
-});
-
-platformBrowserDynamic().bootstrapModule(AppModule).then(platformRef => {
-  const upgrade = platformRef.injector.get(UpgradeModule);
-
-  angular.element(document.body).ready(function () {
-    upgrade.bootstrap(document.body, ['OrientDBStudioApp']);
-  });
-
-});
+// let AppModule = NgModule({
+//   imports: [BrowserModule, UpgradeModule, HttpModule],
+//   providers: [...APP_RESOLVER_PROVIDERS],
+//   declarations: [...APP_DECLARATIONS],
+//   entryComponents: [...APP_DECLARATIONS]
+// }).Class({
+//   constructor: function () {
+//   },
+//   ngDoBootstrap: () => {
+//
+//   }
+// });
+//
+// platformBrowserDynamic().bootstrapModule(AppModule).then(platformRef => {
+//   const upgrade = platformRef.injector.get(UpgradeModule);
+//
+//   angular.element(document.body).ready(function () {
+//     upgrade.bootstrap(document.body, ['OrientDBStudioApp']);
+//   });
+//
+// });
 
 
 
