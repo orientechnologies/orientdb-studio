@@ -2,14 +2,6 @@ import 'jquery';
 import angular from 'angular';
 
 
-import {UpgradeModule} from '@angular/upgrade/static';
-import {NgModule} from '@angular/core';
-import {BrowserModule} from "@angular/platform-browser";
-import {HttpModule} from '@angular/http';
-import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-
-
-
 import 'core-js';
 import 'babel-polyfill';
 import 'zone.js';
