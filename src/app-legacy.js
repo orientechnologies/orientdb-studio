@@ -1,16 +1,6 @@
 import 'jquery';
 import angular from 'angular';
 
-
-import {UpgradeModule} from '@angular/upgrade/static';
-import {NgModule} from '@angular/core';
-import {FormsModule} from '@angular/forms'
-import {BrowserModule} from "@angular/platform-browser";
-import {HttpModule} from '@angular/http';
-import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-
-
-
 import 'core-js';
 import 'babel-polyfill';
 import 'zone.js';
@@ -243,30 +233,3 @@ $('body').on('keyup', function (e) {
     $('.modal-backdrop').click()
   }
 })
-
-
-let AppModule = NgModule({
-  imports: [BrowserModule, UpgradeModule, HttpModule, FormsModule],
-  providers: [...APP_RESOLVER_PROVIDERS],
-  declarations: [...APP_DECLARATIONS],
-  entryComponents: [...APP_DECLARATIONS]
-}).Class({
-  constructor: function () {
-  },
-  ngDoBootstrap: () => {
-
-  }
-});
-
-platformBrowserDynamic().bootstrapModule(AppModule).then(platformRef => {
-  const upgrade = platformRef.injector.get(UpgradeModule);
-
-  angular.element(document.body).ready(function () {
-    upgrade.bootstrap(document.body, ['OrientDBStudioApp']);
-  });
-
-});
-
-
-
-
