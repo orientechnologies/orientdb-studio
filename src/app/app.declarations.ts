@@ -1,5 +1,6 @@
 import {ImportExportComponent} from './dbconfiguration';
-import {TeleporterComponent, SchedulerComponent} from './administration'
+import {TeleporterComponent} from './administration'
+import {SchedulerComponent} from './administration/scheduler'
 import {DualListComponent} from './util'
 
 

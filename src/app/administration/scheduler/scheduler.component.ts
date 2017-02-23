@@ -4,6 +4,7 @@ import * as $ from "jquery"
 
 import {downgradeComponent} from '@angular/upgrade/static';
 import {NotificationService} from "../../core/services/notification.service";
+import {DBService} from "../../core/services/database.service";
 import {AgentService} from "../../core/services/agent.service";
 
 declare var angular:any
@@ -16,7 +17,16 @@ declare var angular:any
 
 class SchedulerComponent {
 
-  constructor(private notification: NotificationService, private agentService: AgentService) {
+  private workingDatabase;
+  private databases;
+
+  private functions;
+
+  private schedules;
+  private workingSchedule;
+
+  constructor(private notification: NotificationService, private agentService: AgentService,
+              private dbService: DBService) {
 
     // agent
     this.agentService.isActive().then(() => {
@@ -27,12 +37,18 @@ class SchedulerComponent {
 
   init() {
 
+    // fetching databases' names
+    this.dbService.listDatabases().then( (data) => {
+      this.databases = data["databases"];
+      this.workingDatabase = this.databases[0];
+    })
+
   }
 
 
 }
 
-angular.module('scheduler.components', []).directive(
+angular.module('scheduler.component', []).directive(
   `scheduler`,
   downgradeComponent({component: SchedulerComponent}));
 

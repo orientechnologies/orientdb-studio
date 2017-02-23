@@ -44,6 +44,7 @@ import '../views/server/stats/auditing/config.html';
 import '../views/server/stats/auditing/newClass.html';
 import '../views/database/auditing/newClass.html';
 import '../views/server/stats/teleporter.html';
+import '../views/server/stats/scheduler.html';
 import '../views/server/stats/events.html';
 import '../views/server/plugins/generic.html';
 import '../views/server/plugins/automaticBackup.html';
@@ -1229,6 +1230,7 @@ ee.controller('EEDashboardController', ["$scope", "$rootScope", "$routeParams", 
     },
     {name: "cluster", title: "Cluster Management", template: 'distributed', icon: 'fa-sitemap'},
     {name: "backup", title: "Backup Management", template: 'backup', icon: 'fa-clock-o'},
+    {name: "scheduler", title: "Event Scheduler", template: 'scheduler', icon: 'fa-calendar'},
     {name: "profiler", title: "Query Profiler", template: 'profiler', icon: 'fa-rocket'},
     {name: "security", title: "Security", template: 'security', icon: 'fa-lock'},
     {name: "teleporter", title: "Teleporter", template: 'teleporterNew', icon: 'fa-usb'},

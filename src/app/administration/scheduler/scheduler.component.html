@@ -7,7 +7,47 @@
   </div>
 
   <div *ngIf="agentService.agent.active">
-    Hallo!
+
+    <div class="row">
+      <div class="col-md-3">
+
+        <form class="form-horizontal">
+          <div class="form-group">
+            <label class="control-label col-md-3">Database</label>
+            <div class="col-md-9">
+              <select class="form-control" name="driver" [(ngModel)]="workingDatabase" required>
+                <option *ngFor="let db of databases" [value]="db"> {{db}} </option>
+              </select>
+            </div>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <form class="form-horizontal">
+          <div class="form-group">
+
+
+
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <form class="form-horizontal">
+          <div class="form-group">
+
+          </div>
+        </form>
+      </div>
+    </div>
+
+
   </div>
 
 </div>

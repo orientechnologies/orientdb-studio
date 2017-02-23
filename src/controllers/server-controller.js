@@ -441,6 +441,7 @@ ServerModule.controller("ServerDashboardController", ['$scope', '$routeParams', 
       icon: 'fa-clock-o',
       wiki: "Studio-Backup-Management.html"
     },
+    {name: "scheduler", title: "Event Scheduler", template: 'scheduler', icon: 'fa-calendar'},
     {name: "security", title: "Security", template: 'security', icon: 'fa-lock', wiki: "Security-Config.html"},
     {name: "teleporter", title: "Teleporter", template: 'teleporterNew', icon: 'fa-usb', wiki: "Studio-Teleporter.html"},
     {name: "plugins", title: "Plugins Management", template: 'plugins', icon: 'fa-plug'},
