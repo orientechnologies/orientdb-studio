@@ -1146,8 +1146,13 @@ codemirror@^5.16.0:
   resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.21.0.tgz#9ec4caeda50807575b2115226bf12414f85d2246"
 
 codemirror@^5.22.2:
+<<<<<<< HEAD
   version "5.24.2"
   resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.24.2.tgz#b55ca950fa009709c37df68eb133310ed89cf2fe"
+=======
+  version "5.24.0"
+  resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.24.0.tgz#6de108da4db9ab368f8ef7a9b822528a74513830"
+>>>>>>> tel-dbname-fix
 
 color-convert@^1.3.0:
   version "1.8.2"
@@ -3923,8 +3928,13 @@ typedarray@~0.0.5:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
 
 typescript@^2.1.6:
+<<<<<<< HEAD
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.2.0.tgz#626f2fc70087d2480f21ebb12c1888288c8614e3"
+=======
+  version "2.1.6"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.1.6.tgz#40c7e6e9e5da7961b7718b55505f9cac9487a607"
+>>>>>>> tel-dbname-fix
 
 uglify-js@2.4.x:
   version "2.4.24"
@@ -4075,8 +4085,13 @@ vm-browserify@0.0.4:
     indexof "0.0.1"
 
 watchpack@^1.2.0:
+<<<<<<< HEAD
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/watchpack/-/watchpack-1.3.0.tgz#5164d4faabb88dcf277f17c8a3b16bfd3da8bee3"
+=======
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/watchpack/-/watchpack-1.2.0.tgz#15d4620f1e7471f13fcb551d5c030d2c3eb42dbb"
+>>>>>>> tel-dbname-fix
   dependencies:
     async "^2.1.2"
     chokidar "^1.4.3"
@@ -4096,8 +4111,13 @@ webpack-core@^0.6.5:
     source-map "~0.4.1"
 
 webpack-dev-middleware@^1.9.0:
+<<<<<<< HEAD
   version "1.10.1"
   resolved "https://registry.yarnpkg.com/webpack-dev-middleware/-/webpack-dev-middleware-1.10.1.tgz#c6b4cf428139cf1aefbe06a0c00fdb4f8da2f893"
+=======
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/webpack-dev-middleware/-/webpack-dev-middleware-1.10.0.tgz#7d5be2651e692fddfafd8aaed177c16ff51f0eb8"
+>>>>>>> tel-dbname-fix
   dependencies:
     memory-fs "~0.4.1"
     mime "^1.3.4"

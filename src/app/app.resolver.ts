@@ -12,8 +12,8 @@ const APP_SERVICES = [
   GraphService,
   SchemaService,
   CommandService,
-  NotificationService,
   TeleporterService,
+  NotificationService,
   AgentService,
   ProfilerService,
   GraphService
