@@ -1318,8 +1318,6 @@ table.table-backup {
 .ee-disabled {
   pointer-events: all !important;
 }
-<<<<<<< HEAD
-=======
 
 .footer {
   position: absolute;
@@ -1339,4 +1337,3 @@ table.table-backup {
   color: #f5f5f5;
   text-align: center;
 }
->>>>>>> tel-dbname-fix

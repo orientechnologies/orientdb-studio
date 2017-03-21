@@ -236,9 +236,4 @@ $('body').on('keyup', function (e) {
     $('.modal-backdrop').click()
   }
 })
-<<<<<<< HEAD:src/app-legacy.js
-=======
 
-
-
->>>>>>> tel-dbname-fix:src/app-legacy.js
