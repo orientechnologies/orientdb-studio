@@ -8,11 +8,7 @@
 
   <div *ngIf="agentService.agent.active">
 
-<<<<<<< HEAD
-    <form class="form-horizontal" id="teleporterForm" name="teleporterForm" #form="ngForm"> {{message}}
-=======
     <form class="form-horizontal" id="teleporterForm" name="teleporterForm" #form="ngForm">
->>>>>>> tel-dbname-fix
 
       <div id="stepSwitch" [ngSwitch]="getStep()">
 
@@ -169,16 +165,6 @@
           </div>
 
           <div class="form-group">
-<<<<<<< HEAD
-            <label class="col-sm-2 control-label">OrientDB URL</label>
-            <div class="col-md-7">
-              <input type="text" id="outDBUrl" class="form-control" [(ngModel)]="config.url" name="outDbUrl"
-                     placeholder="OrientDB URL" required/>
-            </div>
-            <div class="col-md-3">
-              <button type="button" class="btn btn-sm btn-primary" data-toggle="popover" data-html="true"
-                      [attr.data-content]="hints.outDbUrl" data-animation="am-fade-and-scale"><b>?</b></button>
-=======
             <label class="col-sm-2 control-label">OrientDB Database Name</label>
             <div class="col-md-5">
               <input type="text" id="outDBName" class="form-control" [(ngModel)]="config.outDBName" name="outDBName"
@@ -187,7 +173,6 @@
             <div class="col-md-5">
               <button type="button" class="btn btn-sm btn-primary" data-toggle="popover" data-html="true"
                       [attr.data-content]="hints.outDBName" data-animation="am-fade-and-scale"><b>?</b></button>
->>>>>>> tel-dbname-fix
             </div>
           </div>
 
@@ -280,11 +265,7 @@
 
           <div class="form-group">
             <div class="col-sm-offset-9 col-sm-3">
-<<<<<<< HEAD
-                <button type="button" class="btn btn-sm btn-primary" (click)="testConnection()">Test connection</button>
-=======
               <button type="button" class="btn btn-sm btn-primary" (click)="testConnection()">Test connection</button>
->>>>>>> tel-dbname-fix
             </div>
           </div>
 
