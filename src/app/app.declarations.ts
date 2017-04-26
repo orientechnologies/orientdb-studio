@@ -6,6 +6,7 @@ import {DualListComponent} from './util'
 export const APP_DECLARATIONS = [
   ImportExportComponent,
   TeleporterComponent,
+  EtlComponent,
   SchedulerComponent,
   DualListComponent
 ];
