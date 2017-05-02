@@ -1,4 +1,5 @@
 import 'jquery';
+import 'jquery-ui';
 import angular from 'angular';
 
 import 'core-js';
