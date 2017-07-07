@@ -516,6 +516,8 @@ database.factory('DatabaseApi', ["$http", "$resource", "$q", function ($http, $r
   resource.isEE = function () {
 
     let promise;
+
+
     if (resource.ee === null) {
       var deferred = $q.defer();
       $http.get(API + 'isEE').success(function (data) {
@@ -528,9 +530,7 @@ database.factory('DatabaseApi', ["$http", "$resource", "$q", function ($http, $r
       promise = deferred.promise;
       resource.ee = promise;
     } else if (resource.ee.enterprise != undefined) {
-      var deferred = $q.defer();
-      promise = deferred.promise;
-
+      promise = $q.resolve(resource.ee);
     } else {
       promise = resource.ee;
     }
