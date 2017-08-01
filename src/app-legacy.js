@@ -1,4 +1,5 @@
 import 'jquery';
+import 'jquery-ui';
 import 'select2'
 
 import angular from 'angular';
@@ -132,6 +133,7 @@ let deps = [HeaderController,
   'LocalStorageModule',
   'aside.services',
   'teleporter.components',
+  'etl.component',
   'neo4jimporter.components',
   'graph.services',
   'icon.services',

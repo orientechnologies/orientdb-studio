@@ -54,6 +54,69 @@ body {
   box-shadow: 0px 0px 1px 1px #929292;
 }
 
+.etl-intro {
+  background: url("../img/etl-bg.png") #ffffff no-repeat center;
+  height: 500px;
+  width: inherit;
+  position: relative;
+}
+
+.etl-panel {
+  background: url("../img/etl-panel-bg.png") #ffffff no-repeat center;
+  height: 400px;
+  width: inherit;
+  position: relative;
+}
+
+.etl-transformers {
+  background: url("../img/etl-transformer-bg.png") #fafafa no-repeat center;
+  position: relative;
+  height: 440px;
+}
+
+.bootstrap-tagsinput {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  display: block;
+  padding: 4px 6px;
+  color: #555;
+  vertical-align: middle;
+  border-radius: 4px;
+  max-width: 100%;
+  line-height: 22px;
+  cursor: text;
+}
+.bootstrap-tagsinput input {
+  border: none;
+  box-shadow: none;
+  outline: none;
+  background-color: transparent;
+  padding: 0 6px;
+  margin: 0;
+  width: auto;
+  max-width: inherit;
+}
+
+body.dragging, body.dragging * {
+  cursor: move !important;
+}
+
+.dragged {
+  position: absolute;
+  opacity: 0.5;
+  z-index: 2000;
+}
+
+ol.transformer-list li.placeholder {
+  position: relative;
+  /** More li styles **/
+}
+ol.transformer-list li.placeholder:before {
+  position: absolute;
+  /** Define arrowhead **/
+}
+
 body div.container-notification {
   padding-top: 48px
 }

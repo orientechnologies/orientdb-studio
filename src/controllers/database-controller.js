@@ -475,12 +475,23 @@ dbModule.controller("BrowseController", ['$scope', '$routeParams', '$route', '$l
 }]);
 dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$location', 'Database', 'CommandApi', 'localStorageService', 'Spinner', 'NgTableParams', '$document', '$ojson', 'ngTableEventsChannel', function ($scope, $routeParams, $filter, $location, Database, CommandApi, localStorageService, Spinner, ngTableParams, $document, $ojson, ngTableEventsChannel) {
 
-
+  $scope.current = 'table';
   $scope.itemByPage = 10;
   var data = $scope.item.resultTotal;
 
   if ($scope.item.rawData instanceof Object) {
     $scope.item.rawData = JSON.stringify($scope.item.rawData);
+  }
+
+  $scope.showExplain = function () {
+    $scope.current = 'explain';
+  }
+
+  console.log('outside if')
+  //if($scope.item.rawData.executionPlan && $scope.item.executedQuery.startsWith('explain')) {
+  if($scope.item.executedQuery.startsWith('explain') || $scope.item.executedQuery.startsWith('profile')) {
+    console.log('inside if')
+    $scope.showExplain();
   }
 
   $scope.indexes = []
@@ -490,7 +501,6 @@ dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$l
     $scope.indexes.push(total);
   });
 
-  $scope.current = 'table';
   $scope.bookIcon = 'fa fa-star';
   $scope.viewerOptions = {
     lineWrapping: true,
@@ -500,7 +510,6 @@ dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$l
     onLoad: function (_cm) {
       $scope.vcm = _cm;
     }
-
   };
 
 
