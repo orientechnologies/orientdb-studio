@@ -1,5 +1,7 @@
 import 'jquery';
 import 'jquery-ui';
+import 'select2'
+
 import angular from 'angular';
 
 import 'core-js';
@@ -132,6 +134,7 @@ let deps = [HeaderController,
   'aside.services',
   'teleporter.components',
   'etl.component',
+  'neo4jimporter.components',
   'graph.services',
   'icon.services',
   'history.services',
@@ -146,6 +149,9 @@ let deps = [HeaderController,
   'graph',
   'duScroll',
   'dbconfig.components',
+  'teleporter.components',
+  'importmanager.component',
+  "newsbox.component",
   'ui.select',
   'ngRoute',
   'ngAnimate',
@@ -237,6 +243,4 @@ $('body').on('keyup', function (e) {
     $('.modal-backdrop').click()
   }
 })
-
-
 

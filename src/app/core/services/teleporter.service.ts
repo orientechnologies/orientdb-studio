@@ -41,12 +41,32 @@ class TeleporterService {
   }
 
   getTablesNames(params) {
-    let url = API + 'teleporter/tables'
+    let url = API + 'teleporter/tables';
     return this.http.post(url, params).toPromise().then((data) => {
       return data.json();
     })
   }
 
+  getMigrationConfig(params) {
+    var args = angular.copy(params);
+    let url = API + 'teleporter/job';
+    if(args.strategy === "naive") {
+      args.strategy = "interactive";
+    }
+    else if(args.strategy === "naive-aggregate") {
+      args.strategy = "interactive-aggr";
+    }
+    return this.http.post(url, args).toPromise().then((data) => {
+      return data.json();
+    })
+  }
+
+  saveConfiguration(params) {
+    let url = API + 'teleporter/save-config';
+    return this.http.post(url, params).toPromise().then((data) => {
+      return data.json();
+    });
+  }
 }
 
 

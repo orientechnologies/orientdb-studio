@@ -106,7 +106,7 @@ DocController.controller("DocumentModalController", ['$scope', '$routeParams', '
   $scope.database = $scope.db;
   $scope.reload = function () {
     $scope.doc = DocumentApi.get({database: $scope.db, document: $scope.rid}, function () {
-      $scope.headers = Database.getPropertyFromDoc($scope.doc);
+      $scope.headers = Database.getPropertyFromDoc($scope.doc,true);
       $scope.onReload();
     }, function (error) {
       Notification.push({content: JSON.stringify(error)});
@@ -419,6 +419,8 @@ function BaseEditController($scope, $routeParams, $route, $location, $modal, $q,
       DocumentApi.createDocument($scope.database, $scope.doc['@rid'], $scope.doc, function (data) {
         Notification.push({content: JSON.stringify(data)});
         $location.path('database/' + $scope.database + '/browse/edit/' + data['@rid'].replace('#', ''));
+      }, (err) => {
+        Notification.push({content: err, error: true, autoHide: true});
       });
     }
   }

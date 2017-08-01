@@ -340,10 +340,12 @@ database.factory('Database', ["DatabaseApi", "localStorageService", "SchemaServi
      * @param {doc} OrientDB Document.
      * @return {Array} Property name Array.
      */
-    getPropertyFromDoc: function (doc) {
+    getPropertyFromDoc: function (doc, includeLinks) {
       var c = doc['@class'];
       var isGraph = this.isGraph(c);
       var fixedHeader = this.header.concat(this.exclude);
+
+
       var self = this;
       var fields = this.listField(c);
       var all = Object.keys(doc).filter(function (element, index, array) {
@@ -351,6 +353,10 @@ database.factory('Database', ["DatabaseApi", "localStorageService", "SchemaServi
         if (isGraph) {
           return (fixedHeader.indexOf(element) == -1 && (!element.startsWith("in_") && !element.startsWith("out_")) && !self.isLink(type));
         } else {
+
+          if (includeLinks === true) {
+            return true;
+          }
           return (fixedHeader.indexOf(element) == -1 && !self.isLink(type));
         }
       });
@@ -361,6 +367,9 @@ database.factory('Database', ["DatabaseApi", "localStorageService", "SchemaServi
           var bool = true;
           if (isGraph) {
             bool = (fixedHeader.indexOf(elem) == -1 && (!elem.startsWith("in_") && !elem.startsWith("out_")) && !self.isLink(type));
+            if (self.isLink(type) && includeLinks === true) {
+              bool = true;
+            }
           } else {
             bool = (fixedHeader.indexOf(elem) == -1 && !self.isLink(type));
           }
@@ -507,6 +516,8 @@ database.factory('DatabaseApi', ["$http", "$resource", "$q", function ($http, $r
   resource.isEE = function () {
 
     let promise;
+
+
     if (resource.ee === null) {
       var deferred = $q.defer();
       $http.get(API + 'isEE').success(function (data) {
@@ -519,9 +530,7 @@ database.factory('DatabaseApi', ["$http", "$resource", "$q", function ($http, $r
       promise = deferred.promise;
       resource.ee = promise;
     } else if (resource.ee.enterprise != undefined) {
-      var deferred = $q.defer();
-      promise = deferred.promise;
-
+      promise = $q.resolve(resource.ee);
     } else {
       promise = resource.ee;
     }
@@ -633,10 +642,12 @@ database.factory('CommandApi', ["$http", "$resource", "Notification", "Spinner",
     if (contentType == 'text/csv') {
       var query = params.text.trim();
       var config = {headers: {"accept": contentType}};
+
+
       $http.post(text, query, config).success(function (data) {
         var time = ((new Date().getTime() - startTime) / 1000);
         var records = data.result ? data.result.length : "";
-        var form = $('<a style="display: none;" type="hidden" id="linkdownload" href="data:application/octet-stream;charset=utf-8;base64,' + Base64.encode(data) + '">asdasdasasd</a>');
+        var form = $('<a style="display: none;" type="hidden" id="linkdownload" href="data:application/octet-stream;charset=utf-8;base64,' + Base64.Base64.encode(data) + '">asdasdasasd</a>');
         $('#download').append(form);
 
 
@@ -658,8 +669,6 @@ database.factory('CommandApi', ["$http", "$resource", "Notification", "Spinner",
         Notification.push({content: data});
         if (error) error(data);
       });
-      ;
-
     }
 
     else {
@@ -780,7 +789,7 @@ database.factory('BatchApi', ["$http", "$resource", "Notification", "Spinner", "
 database.factory('DocumentApi', ["$http", "$resource", "Database", "$q", function ($http, $resource, Database, $q) {
 
   var resource = $resource(API + 'document/:database/:document');
-  resource.updateDocument = function (database, rid, doc, callback) {
+  resource.updateDocument = function (database, rid, doc, callback, err) {
     var deferred = $q.defer()
     $http.put(API + 'document/' + database + "/" + rid.replace('#', ''), doc).success(function (data) {
       if (callback) {
@@ -789,7 +798,7 @@ database.factory('DocumentApi', ["$http", "$resource", "Database", "$q", functio
       deferred.resolve(data);
     }).error(function (data) {
       if (callback) {
-        callback(data)
+        err(data)
       }
       deferred.reject(data);
     });
@@ -808,7 +817,7 @@ database.factory('DocumentApi', ["$http", "$resource", "Database", "$q", functio
     });
     //$http.put(API + 'document/' + database + "/" + rid.replace('#',''),doc,{headers: { 'Content-Type': undefined }}).success(callback).error(callback);
   }
-  resource.createDocument = function (database, rid, doc, callback) {
+  resource.createDocument = function (database, rid, doc, callback, err) {
     var deferred = $q.defer()
     $http.post(API + 'document/' + database + "/" + rid.replace('#', ''), doc).success(function (data) {
 
@@ -817,8 +826,8 @@ database.factory('DocumentApi', ["$http", "$resource", "Database", "$q", functio
       }
       deferred.resolve(data);
     }).error(function (data) {
-      if (callback) {
-        callback(data)
+      if (err) {
+        err(data)
       }
       deferred.reject(data);
     });
