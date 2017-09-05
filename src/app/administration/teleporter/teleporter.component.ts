@@ -259,6 +259,8 @@ class TeleporterComponent implements AfterViewChecked {
 
   saveConfiguration() {
 
+    var migrationConfigString;
+
     // fetching modelling config if it's not undefined and preparation
     if(this.modellingConfig) {
 
@@ -266,7 +268,7 @@ class TeleporterComponent implements AfterViewChecked {
       var configCopy = JSON.parse(JSON.stringify(this.modellingConfig));
 
       this.prepareModellingConfig(configCopy);
-      var migrationConfigString = JSON.stringify(configCopy);
+      migrationConfigString = JSON.stringify(configCopy);
     }
 
     var params = {

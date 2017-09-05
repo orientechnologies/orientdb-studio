@@ -4,7 +4,6 @@ import * as $ from "jquery"
 
 import {downgradeComponent} from '@angular/upgrade/static';
 import {NotificationService} from "../../core/services/notification.service";
-import {AgentService} from "../../core/services/agent.service";
 import {Neo4jImporterService} from "../../core/services/neo4jimporter.service"
 
 declare var angular:any
@@ -73,7 +72,7 @@ class Neo4jImporterComponent implements AfterViewChecked {
       outDbName: "The target database name where the Neo4j database will be migrated. The database will be created by the import tool if not present. " +
       "In case the database already exists, the Neo4j to OrientDB Importer will behave accordingly to the checkbox below.",
       overwriteOrientDB: "Overwrite OrientDB target database if it already exists.",
-      createIndicesOnRelationhips: "Create indices on imported edges in OrientDB. In this way an index will be built for each Edge class on 'Neo4jRelID' property.",
+      createIndicesOnRelationships: "Create indices on imported edges in OrientDB. In this way an index will be built for each Edge class on 'Neo4jRelID' property.",
       logLevel: "Level of verbosity printed to the output during the execution."
     }
 
