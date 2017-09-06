@@ -32,7 +32,7 @@ class Neo4jImporterComponent implements AfterViewChecked {
 
   private hints;
 
-  constructor(private neo4jImorterService: Neo4jImporterService, private notification: NotificationService, private zone: NgZone) {
+  constructor(private neo4jImporterService: Neo4jImporterService, private notification: NotificationService, private zone: NgZone) {
       this.init();
   }
 
@@ -118,7 +118,7 @@ class Neo4jImporterComponent implements AfterViewChecked {
   }
 
   testConnection() {
-    this.neo4jImorterService.testConnection(this.config).then((data) => {
+    this.neo4jImporterService.testConnection(this.config).then((data) => {
       this.notification.push({content: "Connection is alive", autoHide: true});
     }).catch((error) => {
       this.notification.push({content: error.json(), error: true, autoHide: true});
@@ -129,7 +129,7 @@ class Neo4jImporterComponent implements AfterViewChecked {
 
     this.initJobInfo();
 
-    this.neo4jImorterService.launch(this.config).then((data) => {
+    this.neo4jImporterService.launch(this.config).then((data) => {
       this.step = "running";
       this.jobRunning = true;
       this.status();
@@ -141,7 +141,7 @@ class Neo4jImporterComponent implements AfterViewChecked {
 
   status() {
     if(this.jobRunning) {
-      this.neo4jImorterService.status().then((data) => {
+      this.neo4jImporterService.status().then((data) => {
         if (data.jobs.length > 0) {
           var currentJobInfo = data.jobs[0];
           this.job.cfg = currentJobInfo.cfg;
