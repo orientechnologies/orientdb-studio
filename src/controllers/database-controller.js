@@ -478,7 +478,6 @@ dbModule.controller("QueryController", ['$scope', '$routeParams', '$filter', '$l
 
   let pPage = BrowseConfig.get('pageSize');
 
-  console.log(pPage);
   $scope.itemByPage = pPage ? parseInt(pPage) : 10;
 
 
