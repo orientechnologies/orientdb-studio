@@ -3,7 +3,7 @@ import {STUDIO_VERSION} from '../constants';
 import '../views/server/about.html';
 import angular from 'angular';
 
-let HeaderController = angular.module('header.controller', [databaseServices]).controller("HeaderController", ['$scope', '$rootScope', '$routeParams', '$http', '$location', '$modal', '$q', 'Database', 'Aside', 'DatabaseApi', function ($scope, $rootScope, $routeParams, $http, $location, $modal, $q, Database, Aside, DatabaseApi) {
+let HeaderController = angular.module('header.controller', [databaseServices]).controller("HeaderController", ['$scope', '$rootScope', '$routeParams', '$http', '$location', '$modal', '$q', 'Database', 'Aside', 'DatabaseApi', '$timeout', function ($scope, $rootScope, $routeParams, $http, $location, $modal, $q, Database, Aside, DatabaseApi, $timeout) {
   $scope.database = Database;
   $scope.selectedMenu = null;
   $scope.menus = [];
@@ -56,21 +56,23 @@ let HeaderController = angular.module('header.controller', [databaseServices]).c
   $scope.setSelected = function () {
 
 
-    $scope.menus.forEach(function (element, index, array) {
-      var find = $location.path().indexOf("/" + element.name.toLowerCase());
+    let splitted = $location.path().split("/")
 
-      if (find != -1) {
-        $scope.selectedMenu = element;
-        if (!$scope.$$phase && !$scope.$root.$$phase) {
-          $scope.$apply();
-        }
+    $scope.menus.forEach(function (element, index, array) {
+      if (element.name.toLowerCase() === splitted[3].toLowerCase()) {
+
+        $timeout(() => {
+          $scope.selectedMenu = element;
+          if (!$scope.$$phase && !$scope.$root.$$phase) {
+            $scope.$apply();
+          }
+        })
         return;
       }
-
     });
   }
   $scope.getClass = function (menu) {
-    return menu == $scope.selectedMenu ? 'active' : '';
+    return menu === $scope.selectedMenu ? 'active' : '';
   }
   $rootScope.$on('$routeChangeSuccess', function (scope, next, current) {
     $scope.setSelected();
