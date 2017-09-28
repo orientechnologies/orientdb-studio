@@ -5,7 +5,6 @@ node("master") {
 
     stage('Source checkout') {
     
-    }
         checkout scm
     }
 
