@@ -10,13 +10,15 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="#/" ng-click="logout()">
-        <img src="../img/orient_db.png" alt="logo"/>
+        <img ng-if="!enterprise" src="../img/community.png" alt="logo"/>
+        <img ng-if="enterprise" src="../img/enterprise.png" alt="logo"/>
       </a>
     </div>
 
     <div class="collapse navbar-collapse navbar-ex1-collapse">
       <ul class="nav navbar-nav" ng-show="database.getName()">
-        <li data-match-route="{{menu.link}}" ng-class="getClass(menu)" ng-repeat="menu in menus">
+        <li data-match-route="{{menu.link}}" ng-class="{'active' : menu.name === selectedMenu.name}"
+            ng-repeat="menu in menus">
           <a ng-show="menu.show" href="{{menu.link}}" ng-class="{'disabled' : !menu.show }"><i
             class="{{menu.icon}}"></i> {{menu.name |
             capitalize }}

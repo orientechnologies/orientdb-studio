@@ -7,7 +7,7 @@ import angular from 'angular';
 let database = angular.module('database.services', ['ngResource', SpinnerService]);
 
 
-database.factory('Database', ["DatabaseApi", "localStorageService", function (DatabaseApi, localStorageService) {
+database.factory('Database', ["DatabaseApi", "localStorageService", "SchemaService", function (DatabaseApi, localStorageService, SchemaService) {
 
 
   var version = STUDIO_VERSION.indexOf("SNAPSHOT") == -1 ? STUDIO_VERSION : "last";
@@ -52,6 +52,7 @@ database.factory('Database', ["DatabaseApi", "localStorageService", function (Da
        } */
       return current.metadata;
     },
+
     setMetadata: function (metadata) {
       current.metadata = metadata;
     },
@@ -319,57 +320,19 @@ database.factory('Database', ["DatabaseApi", "localStorageService", function (Da
       return clazzReturn;
     },
     isGraph: function (clazz) {
-      var sup = clazz;
-
-      var iterator = clazz;
-      while ((iterator = this.getSuperClazz(iterator)) != "") {
-        sup = iterator;
-        if (sup == 'V' || sup == 'E') {
-          return true;
-        }
-      }
-      return sup == 'V' || sup == 'E';
+      return SchemaService.isGraphClass(this.listClasses(), clazz);
     },
     isVertex: function (clazz) {
-      var sup = clazz;
-      var iterator = clazz;
-
-      while ((iterator = this.getSuperClazz(iterator)) != "") {
-        sup = iterator;
-      }
-      return sup == 'V';
+      return SchemaService.isEdgeClass(this.listClasses(), clazz);
     },
     isEdge: function (clazz) {
-      var sup = clazz;
-      var iterator = clazz;
-      while ((iterator = this.getSuperClazz(iterator)) != "") {
-        sup = iterator;
-      }
-      return sup == 'E';
+      return SchemaService.isEdgeClass(this.listClasses(), clazz);
     },
     getClazzEdge: function () {
-      var metadata = this.getMetadata();
-      var classes = metadata['classes'];
-      var clazzes = new Array;
-      for (var entry in classes) {
-        var name = classes[entry]['name'];
-        if (this.isEdge(name)) {
-          clazzes.push(name);
-        }
-      }
-      return clazzes;
+      return SchemaService.edgeClasses(this.listClasses()).map((c) => c.name);
     },
     getClazzVertex: function () {
-      var metadata = this.getMetadata();
-      var classes = metadata['classes'];
-      var clazzes = new Array;
-      for (var entry in classes) {
-        var name = classes[entry]['name'];
-        if (this.isVertex(name)) {
-          clazzes.push(name);
-        }
-      }
-      return clazzes;
+      return SchemaService.vertexClasses(this.listClasses()).map((c) => c.name);
     },
     /**
      * Creates a new Array from a document with property name.
@@ -377,10 +340,12 @@ database.factory('Database', ["DatabaseApi", "localStorageService", function (Da
      * @param {doc} OrientDB Document.
      * @return {Array} Property name Array.
      */
-    getPropertyFromDoc: function (doc) {
+    getPropertyFromDoc: function (doc, includeLinks) {
       var c = doc['@class'];
       var isGraph = this.isGraph(c);
       var fixedHeader = this.header.concat(this.exclude);
+
+
       var self = this;
       var fields = this.listField(c);
       var all = Object.keys(doc).filter(function (element, index, array) {
@@ -388,6 +353,10 @@ database.factory('Database', ["DatabaseApi", "localStorageService", function (Da
         if (isGraph) {
           return (fixedHeader.indexOf(element) == -1 && (!element.startsWith("in_") && !element.startsWith("out_")) && !self.isLink(type));
         } else {
+
+          if (includeLinks === true) {
+            return true;
+          }
           return (fixedHeader.indexOf(element) == -1 && !self.isLink(type));
         }
       });
@@ -398,6 +367,9 @@ database.factory('Database', ["DatabaseApi", "localStorageService", function (Da
           var bool = true;
           if (isGraph) {
             bool = (fixedHeader.indexOf(elem) == -1 && (!elem.startsWith("in_") && !elem.startsWith("out_")) && !self.isLink(type));
+            if (self.isLink(type) && includeLinks === true) {
+              bool = true;
+            }
           } else {
             bool = (fixedHeader.indexOf(elem) == -1 && !self.isLink(type));
           }
@@ -512,6 +484,8 @@ database.factory('DatabaseApi', ["$http", "$resource", "$q", function ($http, $r
   resource.sso = false;
 
 
+  resource.ee = null;
+
   resource.isSSO = function () {
     var deferred = $q.defer();
 
@@ -537,6 +511,30 @@ database.factory('DatabaseApi', ["$http", "$resource", "$q", function ($http, $r
       deferred.reject(data);
     });
     return deferred.promise;
+  }
+
+  resource.isEE = function () {
+
+    let promise;
+
+
+    if (resource.ee === null) {
+      var deferred = $q.defer();
+      $http.get(API + 'isEE').success(function (data) {
+        resource.ee = data;
+        deferred.resolve(data);
+      }).error(function (data) {
+        resource.ee = {enterprise: false};
+        deferred.reject(data);
+      });
+      promise = deferred.promise;
+      resource.ee = promise;
+    } else if (resource.ee.enterprise != undefined) {
+      promise = $q.resolve(resource.ee);
+    } else {
+      promise = resource.ee;
+    }
+    return promise;
   }
 
   resource.install = function (db, username, password) {
@@ -644,10 +642,12 @@ database.factory('CommandApi', ["$http", "$resource", "Notification", "Spinner",
     if (contentType == 'text/csv') {
       var query = params.text.trim();
       var config = {headers: {"accept": contentType}};
+
+
       $http.post(text, query, config).success(function (data) {
         var time = ((new Date().getTime() - startTime) / 1000);
         var records = data.result ? data.result.length : "";
-        var form = $('<a style="display: none;" type="hidden" id="linkdownload" href="data:application/octet-stream;charset=utf-8;base64,' + Base64.encode(data) + '">asdasdasasd</a>');
+        var form = $('<a style="display: none;" type="hidden" id="linkdownload" href="data:application/octet-stream;charset=utf-8;base64,' + Base64.Base64.encode(data) + '">asdasdasasd</a>');
         $('#download').append(form);
 
 
@@ -669,8 +669,6 @@ database.factory('CommandApi', ["$http", "$resource", "Notification", "Spinner",
         Notification.push({content: data});
         if (error) error(data);
       });
-      ;
-
     }
 
     else {
@@ -689,7 +687,9 @@ database.factory('CommandApi', ["$http", "$resource", "Notification", "Spinner",
           }
 
           if (data != undefined) {
-            data.notification = noti;
+            if (typeof data != "string") {
+              data.notification = noti;
+            }
             callback(data);
           }
           else {
@@ -789,7 +789,7 @@ database.factory('BatchApi', ["$http", "$resource", "Notification", "Spinner", "
 database.factory('DocumentApi', ["$http", "$resource", "Database", "$q", function ($http, $resource, Database, $q) {
 
   var resource = $resource(API + 'document/:database/:document');
-  resource.updateDocument = function (database, rid, doc, callback) {
+  resource.updateDocument = function (database, rid, doc, callback, err) {
     var deferred = $q.defer()
     $http.put(API + 'document/' + database + "/" + rid.replace('#', ''), doc).success(function (data) {
       if (callback) {
@@ -798,7 +798,7 @@ database.factory('DocumentApi', ["$http", "$resource", "Database", "$q", functio
       deferred.resolve(data);
     }).error(function (data) {
       if (callback) {
-        callback(data)
+        err(data)
       }
       deferred.reject(data);
     });
@@ -817,7 +817,7 @@ database.factory('DocumentApi', ["$http", "$resource", "Database", "$q", functio
     });
     //$http.put(API + 'document/' + database + "/" + rid.replace('#',''),doc,{headers: { 'Content-Type': undefined }}).success(callback).error(callback);
   }
-  resource.createDocument = function (database, rid, doc, callback) {
+  resource.createDocument = function (database, rid, doc, callback, err) {
     var deferred = $q.defer()
     $http.post(API + 'document/' + database + "/" + rid.replace('#', ''), doc).success(function (data) {
 
@@ -826,8 +826,8 @@ database.factory('DocumentApi', ["$http", "$resource", "Database", "$q", functio
       }
       deferred.resolve(data);
     }).error(function (data) {
-      if (callback) {
-        callback(data)
+      if (err) {
+        err(data)
       }
       deferred.reject(data);
     });
@@ -979,7 +979,7 @@ database.factory('ClassAlterApi', ["$http", "$resource", "$q", function ($http, 
 
     var deferred = $q.defer();
     var text = API + 'command/' + database + '/sql/-/-1?format=rid,type,version,class,graph';
-    var query = "alter class {{clazz}} {{name}} {{value}}"
+    var query = "alter class `{{clazz}}` {{name}} {{value}}"
     var queryText = S(query).template(props).s;
     $http.post(text, queryText).success(function (data) {
       deferred.resolve(data)

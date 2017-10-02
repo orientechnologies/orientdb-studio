@@ -1,74 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <assembly>
 
-  <id>distribution</id>
+    <id>distribution</id>
 
-  <formats>
-    <format>zip</format>
-    <format>jar</format>
-  </formats>
+    <formats>
+        <format>zip</format>
+        <format>jar</format>
+    </formats>
 
-  <includeBaseDirectory>false</includeBaseDirectory>
+    <includeBaseDirectory>false</includeBaseDirectory>
 
-  <files>
-    <file>
-      <source>${basedir}/plugin.json</source>
-      <outputDirectory>/</outputDirectory>
-    </file>
-  </files>
+    <files>
+        <file>
+            <source>${basedir}/plugin.json</source>
+            <outputDirectory>/</outputDirectory>
+        </file>
 
-  <fileSets>
-    <!--
-     | copy benchmarks scripts
-    -->
+        <file>
+            <source>${basedir}/history-orientdb-studio.txt</source>
+            <fileMode>444</fileMode>
+        </file>
 
+    </files>
 
-    <!--
-     | copy server scripts
-    -->
+    <fileSets>
+        <fileSet>
+            <directory>${basedir}/dist/www</directory>
+            <outputDirectory>www</outputDirectory>
+        </fileSet>
 
-
-    <!--
-     | copy distributed scripts
-    -->
-
-    <!--
-     | copy graphdb scripts
-    -->
-
-    <!--
-     | configurations
-    -->
-
-    <fileSet>
-      <directory>${basedir}/dist/www</directory>
-      <outputDirectory>www</outputDirectory>
-    </fileSet>
-
-    <!--
-     | Plugins
-    -->
-    <fileSet>
-      <directory>${basedir}/plugins</directory>
-      <outputDirectory>plugins</outputDirectory>
-    </fileSet>
+        <!--
+         | Plugins
+        -->
+        <fileSet>
+            <directory>${basedir}/plugins</directory>
+            <outputDirectory>plugins</outputDirectory>
+        </fileSet>
 
 
+        <!--
+         | creates an empty log directory
+        -->
+        <fileSet>
+            <directory>${basedir}/config</directory>
+            <outputDirectory>log</outputDirectory>
+            <excludes>
+                <exclude>*</exclude>
+            </excludes>
+        </fileSet>
 
-    <!--
-     | creates an empty log directory
-    -->
-    <fileSet>
-      <directory>${basedir}/config</directory>
-      <outputDirectory>log</outputDirectory>
-      <excludes>
-        <exclude>*</exclude>
-      </excludes>
-    </fileSet>
 
-
-  </fileSets>
-
+    </fileSets>
 
 
 </assembly>

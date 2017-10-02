@@ -34,7 +34,7 @@ notification.factory('Notification', ["$timeout", "$rootScope", function ($timeo
       }
       this.current = n;
       $timeout(function () {
-        if (n && !(n.options.type === 'error'))
+        if (n && !(n.options.type === 'error') && !(notification.sticky))
           n.close();
       }, 4000);
     },
@@ -54,6 +54,15 @@ notification.factory('Notification', ["$timeout", "$rootScope", function ($timeo
       this.notifications.splice(0, this.notifications.length);
       this.errors.splice(0, this.errors.length);
       this.warnings.splice(0, this.warnings.length);
+
+      if (this.current) {
+
+        if (!(this.current.options.type === 'success')) {
+          this.current.close();
+          this.current = null;
+        }
+
+      }
     }
 
   }

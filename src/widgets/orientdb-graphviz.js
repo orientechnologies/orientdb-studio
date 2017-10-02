@@ -30,7 +30,10 @@ let OrientGraph = (function () {
     this.nodes = [];
     this.classesLegends = [];
     this.force = d3.layout.force();
-    this.colors = d3.scale.category20();
+
+
+    this.colors = createColors(this.metadata.classes);
+    // this.colors = d3.scale.category20();
     var self = this;
     this.selected = null;
     this.dragNode = null;
@@ -54,6 +57,34 @@ let OrientGraph = (function () {
       }
 
       return ctoc;
+    }
+
+    function createColors(classes) {
+      let val = classes.map((c) => hashCode(c.name));
+      val.sort((a, b) => {
+        return a - b;
+      });
+      let color = d3.scale.category20()
+        .domain([val[0], val[val.length - 1]])
+      classes.forEach((c) => {
+        color(hash(c.name));
+      })
+      return color;
+    }
+
+    function hashCode(str) {
+      var hash = 0;
+      if (str.length == 0) return hash;
+      for (let i = 0; i < str.length; i++) {
+        let char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      return hash;
+    }
+
+    function hash(cls) {
+      return hashCode(cls);
     }
 
     function discoverVertex(clazz) {
@@ -88,6 +119,24 @@ let OrientGraph = (function () {
           self.config.classes[clazz] = {}
         }
         self.config.classes[clazz].display = val;
+        d3.selectAll('g.vertex-' + clazz.toLowerCase())
+          .selectAll('.vlabel-outside')
+          .attr('class', 'vlabel-outside')
+          .text(bindRealName);
+
+        d3.selectAll('text.elabel-' + clazz.toLowerCase())
+          .selectAll('textPath')
+          .text(function (e) {
+            return bindRealNameOrClazz(e.edge);
+          });
+
+      }
+
+      change['displayExpression'] = function (clazz, prop, val) {
+        if (!self.config.classes[clazz]) {
+          self.config.classes[clazz] = {}
+        }
+        self.config.classes[clazz].displayExpression = val;
         d3.selectAll('g.vertex-' + clazz.toLowerCase())
           .selectAll('.vlabel-outside')
           .attr('class', 'vlabel-outside')
@@ -367,7 +416,7 @@ let OrientGraph = (function () {
       self.nodes.splice(0, self.nodes.length)
       self.links.splice(0, self.links.length)
     }
-    this.simulate = function () {
+    this.simulate = function (forceTick) {
 
       var self = this;
 
@@ -382,6 +431,7 @@ let OrientGraph = (function () {
 
       this.force.tick = function () {
 
+
         var startTick = now()
         var step = mst
         while (step-- && (now() - startTick < mtct)) {
@@ -392,6 +442,10 @@ let OrientGraph = (function () {
         }
         var rnd = Math.floor((Math.random() * 100) + 1);
         if (rnd % 2 == 0) {
+          self.tick();
+        }
+
+        if (forceTick == true) {
           self.tick();
         }
         return false;
@@ -408,16 +462,9 @@ let OrientGraph = (function () {
         .linkStrength(0.1)
         .charge(this.config.charge)
         .friction(this.config.friction)
-      this.simulate();
+
 
       this.svgContainer = this.viewport.append('svg');
-
-      //this.svgContainer
-      //  .attr("preserveAspectRatio", "xMinYMin meet")
-      //  .attr("viewBox", "0 0 1440 1024").style("cursor", "move")
-      //  //class to make it responsive
-      //  .classed("svg-content-responsive", true);
-
 
       // define arrow markers for graph links
       this.svgContainer.append('svg:defs').append('svg:marker')
@@ -1059,7 +1106,7 @@ let OrientGraph = (function () {
       var clsName = getClazzName(d);
       var fill = self.getClazzConfigVal(clsName, "fill");
       if (!fill) {
-        fill = d3.rgb(self.colors(clsName.toString(2))).toString();
+        fill = d3.rgb(self.colors(hash(clsName))).toString();
         self.changeClazzConfig(clsName, "fill", fill);
       }
       return fill;
@@ -1069,7 +1116,9 @@ let OrientGraph = (function () {
       var clsName = getClazzName(d);
       var stroke = self.getClazzConfigVal(clsName, "stroke");
       if (!stroke) {
-        stroke = d3.rgb(self.colors(clsName.toString(2))).darker().toString();
+
+        stroke = d3.rgb(self.colors(hash(clsName))).darker().toString();
+
         self.changeClazzConfig(clsName, "stroke", stroke);
       }
       return stroke;
@@ -1104,8 +1153,14 @@ let OrientGraph = (function () {
     function bindRealName(d) {
 
 
-      var name = self.getClazzConfigVal(getClazzName(d), "display", d.source);
+      var name = self.getClazzConfigVal(getClazzName(d), "displayExpression");
 
+
+      if (name && name !== "") {
+        name = S(name).template(d.source);
+      } else {
+        name = self.getClazzConfigVal(getClazzName(d), "display", d.source);
+      }
       var rid;
       if (d['@rid'].startsWith("#-")) {
         var props = Object.keys(d.source).filter(function (e) {
@@ -1122,7 +1177,14 @@ let OrientGraph = (function () {
     function bindRealNameOrClazz(d) {
 
       var clazz = getClazzName(d);
-      var name = self.getClazzConfigVal(clazz, "display", d);
+
+      var name = self.getClazzConfigVal(getClazzName(d), "displayExpression");
+
+      if (name && name !== "") {
+        name = S(name).template(d);
+      } else {
+        name = self.getClazzConfigVal(clazz, "display", d);
+      }
       return name != null ? name : clazz;
     }
 
@@ -1146,11 +1208,6 @@ let OrientGraph = (function () {
 
 
       var padd = 5;
-
-      //if (typeof padding == 'number') {
-      //  padd = padding;
-      //}
-
 
       radiusTarget = parseInt(radiusTarget);
       radiusSource = parseInt(radiusSource);
@@ -1179,6 +1236,7 @@ let OrientGraph = (function () {
 
         var realPos = calculateRelPos(d);
 
+
         if (realPos == 0) {
           var paddingSource = 5;
           var paddingTarget = 5;
@@ -1193,7 +1251,9 @@ let OrientGraph = (function () {
         var m = (d.target.y - d.source.y) / (d.target.x - d.source.x);
         var val = (Math.atan(m) * 180) / Math.PI;
         var trans = val * (Math.PI / 180) * -1;
-        var radiansConfig = angleRadiants(pos);
+        var edgesLength = countRel(d);
+        var radiansConfig = angleRadiants(pos, edgesLength);
+
         var angleSource;
         var angleTarget;
         var signSourceX;
@@ -1222,24 +1282,37 @@ let OrientGraph = (function () {
         sourceY = d.source.y + ( signSourceY * (sourcePadding * Math.sin(angleSource)));
         targetX = d.target.x + ( signTargetX * (targetPadding * Math.cos(angleTarget)));
         targetY = d.target.y + ( signTargetY * (targetPadding * Math.sin(angleTarget)));
-        var dr = 75 * rel;
+
+
+        // var mod = dist / 10;
+        // var dr = mod * rel;
+
+        var dr = calculateDR(targetX - sourceX, targetY - sourceY, pos, edgesLength);
+
         return "M" + sourceX + "," + sourceY + "A" + dr + "," + dr + " 0 0,1 " + targetX + "," + targetY;
       }
 
     }
 
-    function angleRadiants(pos) {
-      switch (pos) {
-        case 2:
-          return {source: Math.PI / 6, target: (5 * Math.PI) / 6}
-          break;
-        case 3:
-          return {source: Math.PI / 3, target: (2 * Math.PI) / 3}
-          break;
-        case 4:
-          return {source: Math.PI / 2, target: Math.PI / 2}
-          break;
-      }
+
+    function calculateDR(dx, dy, pos, length) {
+      pos = length - pos;
+      var dr = Math.sqrt(dx * dx + dy * dy);
+
+      dr = dr / (1 + (1 / length) * (pos - 1));
+
+      return dr;
+
+    }
+
+    function angleRadiants(pos, length) {
+
+
+      let sourceAngle = 90 - (90 / length) * pos;
+      let targetAngle = (180 - ( 90 - (90 / length) * pos));
+
+      return {source: sourceAngle * (Math.PI / 180), target: targetAngle * (Math.PI / 180)};
+
     }
 
     function bindRectColor(d) {
@@ -2192,10 +2265,15 @@ let OrientGraph = (function () {
     },
     draw: function () {
       this.init();
+
+
       this.drawInternal();
       var radius = this.nodes.length * this.config.linkDistance / (Math.PI * 2)
       var center = {x: this.config.width / 2, y: this.config.height / 2}
-      this.update(this.nodes, center, radius)
+      this.update(this.nodes, center, radius);
+
+      this.simulate(true);
+
       this.force.start();
 
 

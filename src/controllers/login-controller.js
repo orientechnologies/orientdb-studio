@@ -27,6 +27,16 @@ LoginModule.controller("LoginController", ['$scope', '$rootScope', '$routeParams
     }
   });
 
+  $scope.isEE = false;
+
+  DatabaseApi.isEE().then(function (data) {
+    $scope.isEE = data.enterprise;
+  }).catch(function () {
+    $scope.isEE = false;
+  })
+
+  $scope.importHint = "login.importers";
+
   $scope.connect = function (callback) {
     $scope.$broadcast("autofill:update");
     Database.connect($scope.database, $scope.username, $scope.password, function () {
@@ -124,6 +134,10 @@ LoginModule.controller("LoginController", ['$scope', '$rootScope', '$routeParams
       modalPromise.$promise.then(modalPromise.show);
     }
 
+  }
+
+  $scope.goToImporters = function () {
+    $location.path("/dashboard/importers");
   }
 
   $rootScope.$broadcast("request:logout");

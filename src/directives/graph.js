@@ -115,6 +115,8 @@ graph.directive('ngOGraph', function () {
     function loadGraph() {
       var opts = angular.extend({}, scope.$eval(attrs.ngOGraph));
       var ograph = OrientGraph.create(element[0], opts.config, opts.metadata, opts.menu, opts.edgeMenu);
+
+
       ograph.data(opts.data).draw();
 
       if (opts.onLoad) {
@@ -141,7 +143,7 @@ graph.directive('aside', ["$http", "$compile", function ($http, $compile) {
 
       if (s) {
         let tpl = `
-          <div ng-include="'${scope.model.tpl}'"></div>
+          <div style="height: 100%" ng-include="'${scope.model.tpl}'"></div>
         `
         var el = angular.element($compile(tpl)(scope.model.scope));
         element.empty();

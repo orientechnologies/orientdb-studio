@@ -8,6 +8,7 @@ import {BaseEditController} from './document-controller';
 
 import '../views/vertex/addLabel.html';
 import '../views/database/editVertex.html';
+import '../views/database/editEdge.html';
 import '../views/database/modalNew.html';
 import '../views/database/modalEdit.html';
 import '../views/database/modalNewEdge.html';
@@ -15,6 +16,11 @@ import '../views/database/graph/asideEmpty.html';
 import '../views/database/graph/asideEdge.html';
 import '../views/database/graph/asideVertex.html';
 import '../views/database/graphConfig.html';
+import '../views/database/modalEditEdge.html';
+import '../views/vertex/modalConnection.html';
+import '../views/vertex/modalVertexSelect.html';
+import '../views/hints/template-hint.html';
+
 import angular from 'angular';
 
 let GraphModule = angular.module('vertex.controller', ["graph.services", Icons, BrowseConfig]);
@@ -54,8 +60,9 @@ GraphModule.controller("VertexModalController", ['$scope', '$routeParams', '$loc
 }]);
 GraphModule.controller("VertexEditController", ['$scope', '$injector', '$routeParams', '$location', '$modal', '$q', 'DocumentApi', 'Database', 'CommandApi', 'Notification', function ($scope, $injector, $routeParams, $location, $modal, $q, DocumentApi, Database, CommandApi, Notification) {
 
+
   $injector.invoke(BaseEditController, this, {$scope: $scope});
-  Database.setWiki("Edit-vertex.html");
+  Database.setWiki("Edit-Vertex.html");
   $scope.label = 'Vertex';
   $scope.fixed = Database.header;
   $scope.canSave = true;
@@ -111,12 +118,13 @@ GraphModule.controller("VertexEditController", ['$scope', '$injector', '$routePa
   if (!$scope.doc) {
     $scope.reload();
   } else {
-    $scope.headers = Database.getPropertyFromDoc($scope.doc);
+    $scope.headers = Database.getPropertyFromDoc($scope.doc, true);
+
     $scope.isGraph = Database.isGraph($scope.doc['@class']);
     $scope.incomings = Database.getEdge($scope.doc, 'in_');
     $scope.outgoings = Database.getEdge($scope.doc, 'out_');
     $scope.exclude = $scope.outgoings.concat($scope.incomings);
-    $scope.outgoings = $scope.outgoings.concat((Database.getLink($scope.doc, $scope.exclude)));
+
 
     $scope.label = Database.isEdge($scope.doc['@class']) ? "Edge" : "Vertex";
 
@@ -131,7 +139,11 @@ GraphModule.controller("VertexEditController", ['$scope', '$injector', '$routePa
     $scope.limits[i] -= $scope.pageLimit;
   }
   $scope.isHideMore = function (i) {
-    return $scope.limits[i] >= $scope.doc[i].length;
+    if ($scope.doc[i]) {
+      return $scope.limits[i] >= $scope.doc[i].length;
+    } else {
+      return true;
+    }
   }
   $scope.isHideLess = function (i) {
     return $scope.limits[i] == $scope.pageLimit;
@@ -156,6 +168,9 @@ GraphModule.controller("VertexEditController", ['$scope', '$injector', '$routePa
     if (!$scope.limits[i]) {
       $scope.limits[i] = {};
     }
+    if (!arr) {
+      return [];
+    }
     if (arr instanceof Array) {
       return arr;
     } else {
@@ -167,12 +182,7 @@ GraphModule.controller("VertexEditController", ['$scope', '$injector', '$routePa
   }
   $scope.follow = function (rid) {
     var edgeDoc = DocumentApi.get({database: $scope.database, document: rid}, function () {
-      if (Database.isEdge(edgeDoc['@class'])) {
-        $scope.showModal(rid);
-      }
-      else {
-        $scope.navigate(rid);
-      }
+      $scope.navigate(rid);
 
     }, function (error) {
       Notification.push({content: JSON.stringify(error)});
@@ -224,6 +234,63 @@ GraphModule.controller("VertexEditController", ['$scope', '$injector', '$routePa
     });
   }
 }]);
+
+GraphModule.controller("EdgeEditController", ['$scope', '$injector', '$routeParams', '$location', '$modal', '$q', 'DocumentApi', 'Database', 'CommandApi', 'Notification', function ($scope, $injector, $routeParams, $location, $modal, $q, DocumentApi, Database, CommandApi, Notification) {
+
+
+  $injector.invoke(BaseEditController, this, {$scope: $scope});
+  Database.setWiki("Edit-edge.html");
+  $scope.label = 'Edge';
+  $scope.fixed = Database.header;
+  $scope.canSave = true;
+  $scope.canDelete = true;
+  $scope.canCreate = true;
+  $scope.canAdd = true;
+  $scope.pageLimit = 10;
+  $scope.limitProof = 10;
+  $scope.limits = [];
+  $scope.popover = {
+    title: 'Add edge'
+  }
+
+
+  $scope.showVertexModal = function (direction) {
+    var modalScope = $scope.$new(true);
+    modalScope.db = $scope.database;
+
+    modalScope.onSubmit = (rid) => {
+      if (rid && rid.length > 0) {
+        $scope.doc[direction] = rid[0];
+      }
+    }
+    var modalPromise = $modal({
+      template: 'views/vertex/modalVertexSelect.html',
+      persist: false,
+      show: false,
+      scope: modalScope,
+      modalClass: 'createEdge'
+    });
+    modalPromise.$promise.then(modalPromise.show);
+
+  }
+
+  $scope.editUrl = (rid) => {
+    if (rid) {
+      return `#/database/${$routeParams.database}/browse/edit/${rid.replace('#', '')}`;
+    }
+    return "";
+  }
+  if (!$scope.doc) {
+    $scope.reload();
+  } else {
+    $scope.headers = Database.getPropertyFromDoc($scope.doc).filter((c) => {
+      return c != "in" && c != "out";
+    });
+    $scope.isGraph = Database.isGraph($scope.doc['@class']);
+  }
+
+
+}]);
 GraphModule.controller("VertexPopoverLabelController", ['$scope', '$routeParams', '$location', 'DocumentApi', 'Database', 'Notification', function ($scope, $routeParams, $location, DocumentApi, Database, Notification) {
 
   $scope.init = function (where) {
@@ -238,14 +305,16 @@ GraphModule.controller("VertexPopoverLabelController", ['$scope', '$routeParams'
     else {
       name = "in_".concat($scope.popover.name);
     }
-    if ($scope[$scope.where].indexOf(name) == -1)
+    if ($scope[$scope.where].indexOf(name) == -1) {
       $scope[$scope.where].push(name);
+      $scope.showModalConnection(name);
+    }
     delete $scope.popover.name;
   }
 
 }]);
 
-GraphModule.controller("VertexModalBrowseController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'Icon', '$timeout', function ($scope, $routeParams, $location, Database, CommandApi, Icon, $timeout) {
+GraphModule.controller("VertexModalBrowseController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'Icon', '$timeout', '$route', function ($scope, $routeParams, $location, Database, CommandApi, Icon, $timeout, $route) {
 
   $scope.database = Database;
   $scope.limit = 20;
@@ -325,12 +394,90 @@ GraphModule.controller("VertexModalBrowseController", ['$scope', '$routeParams',
     }
     CommandApi.queryText({database: $routeParams.database, language: 'sql', text: command}, function (data) {
       $scope.added = new Array;
-      $scope.container.reload();
+      $route.reload();
     });
-
 
   }
 
+
+}]);
+
+GraphModule.controller("VertexModalSelectController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'Icon', '$timeout', '$route', function ($scope, $routeParams, $location, Database, CommandApi, Icon, $timeout, $route) {
+
+  $scope.database = Database;
+  $scope.limit = 20;
+  $scope.queries = new Array;
+  $scope.added = new Array;
+  $scope.loaded = true;
+
+
+  $scope.editorOptions = {
+    lineWrapping: true,
+    lineNumbers: true,
+    readOnly: false,
+    mode: 'text/x-sql',
+    metadata: Database,
+    extraKeys: {
+      "Ctrl-Enter": function (instance) {
+        $scope.$apply(function () {
+          $scope.query();
+        });
+      },
+      "Ctrl-Space": "autocomplete"
+    },
+    onLoad: function (_cm) {
+      $scope.cm = _cm;
+
+      $scope.cm.on("change", function () { /* script */
+        var wrap = $scope.cm.getWrapperElement();
+        var approp = $scope.cm.getScrollInfo().height > 300 ? "300px" : "auto";
+        if (wrap.style.height != approp) {
+          wrap.style.height = approp;
+          $scope.cm.refresh();
+        }
+      });
+      $scope.cm.refresh();
+
+    }
+  };
+  $scope.query = function () {
+
+    CommandApi.queryText({
+      database: $routeParams.database,
+      language: 'sql',
+      text: $scope.queryText,
+      limit: $scope.limit,
+      verbose: false
+    }, function (data) {
+      if (data.result) {
+        $scope.headers = Database.getPropertyTableFromResults(data.result);
+        $scope.results = data.result;
+      }
+      if ($scope.queries.indexOf($scope.queryText) == -1)
+        $scope.queries.push($scope.queryText);
+    }, function err(data) {
+      $scope.error = data;
+      $timeout(function () {
+        $scope.error = null;
+      }, 2000);
+    });
+  }
+
+
+  $scope.select = function (result) {
+    var index = $scope.added.indexOf(result['@rid']);
+    if (!$scope.multiple) {
+      $scope.added.splice(0, $scope.added.length);
+    }
+    if (index == -1) {
+      $scope.added.push(result['@rid']);
+    } else {
+      $scope.added.splice(index, 1);
+    }
+  }
+  $scope.okSelect = function () {
+    $scope.onSubmit($scope.added);
+  }
 
 }]);
 
@@ -447,7 +594,7 @@ GraphModule.controller("GraphController", ['$scope', '$routeParams', '$location'
       "Ctrl-Space": "autocomplete",
       'Cmd-/': 'toggleComment',
       'Ctrl-/': 'toggleComment',
-      "Cmd-Up": function (instance) {
+      "Alt-Up": function (instance) {
 
 
         if ($scope.currentIndex < $scope.history.length - 1) {
@@ -463,7 +610,7 @@ GraphModule.controller("GraphController", ['$scope', '$routeParams', '$location'
 
 
       },
-      "Cmd-Down": function (instance) {
+      "Alt-Down": function (instance) {
         if ($scope.currentIndex >= 0) {
 
           $scope.currentIndex--;
@@ -779,6 +926,10 @@ GraphModule.controller("GraphController", ['$scope', '$routeParams', '$location'
                 verbose: false
               }, function (data) {
                 $scope.graph.removeEdge(e);
+
+                $timeout(function () {
+                  GraphService.removeEdge($scope.database, $scope.currentUser, e);
+                }, 100)
               });
             }
           });
@@ -907,6 +1058,9 @@ GraphModule.controller("GraphController", ['$scope', '$routeParams', '$location'
                         verbose: false
                       }, function (data) {
                         $scope.graph.removeVertex(v);
+                        $timeout(function () {
+                          GraphService.removeVertex($scope.database, $scope.currentUser, v);
+                        }, 100);
                       });
                     }
                   });
@@ -1032,6 +1186,11 @@ GraphModule.controller("GraphController", ['$scope', '$routeParams', '$location'
     modalScope.confirmSave = function (docs) {
       $scope.graph.endEdgeCreation();
       $scope.graph.data({edges: docs}).redraw();
+      $timeout(function () {
+        GraphService.add($scope.database, $scope.currentUser,
+          {vertices: [], edges: docs}
+        );
+      }, 100)
     }
     modalScope.cancelSave = function (error) {
 
@@ -1041,7 +1200,7 @@ GraphModule.controller("GraphController", ['$scope', '$routeParams', '$location'
       }
     }
     var modalPromise = $modal({
-      template: 'views/database/modalNewEdge.html',
+      templateUrl: 'views/database/modalNewEdge.html',
       persist: false,
       show: false,
       scope: modalScope,
@@ -1061,9 +1220,16 @@ GraphModule.controller("GraphController", ['$scope', '$routeParams', '$location'
     modalScope.confirmSave = function (doc) {
 
       $scope.graph.data({vertices: [doc]}).redraw();
+
+
+      $timeout(function () {
+        GraphService.add($scope.database, $scope.currentUser,
+          {vertices: [doc], edges: []}
+        );
+      }, 100)
     }
     $modal({
-      template: 'views/database/modalNew.html',
+      templateUrl: 'views/database/modalNew.html',
       persist: false,
       show: true,
       scope: modalScope,
@@ -1106,17 +1272,28 @@ GraphModule.controller("GraphController", ['$scope', '$routeParams', '$location'
         });
       }
     }
-    $modal({
-      template: 'views/database/modalEdit.html',
-      persist: false,
-      show: true,
-      scope: modalScope,
-      modalClass: 'editEdge'
-    });
+    if (v.edge) {
+      $modal({
+        template: 'views/database/modalEditEdge.html',
+        persist: false,
+        show: true,
+        scope: modalScope,
+        modalClass: 'editEdge'
+      });
+    } else {
+      $modal({
+        template: 'views/database/modalEdit.html',
+        persist: false,
+        show: true,
+        scope: modalScope,
+        modalClass: 'editEdge'
+      });
+    }
 
   };
   $scope.saveConfig = function () {
     $scope.gConfig.config = $scope.graph.getConfig();
+
     GraphConfig.set($scope.gConfig).then(function (data) {
       $scope.gConfig = data;
       Notification.push({content: 'Configuration Saved Correctly', autoHide: true});
@@ -1146,12 +1323,12 @@ GraphModule.controller("GraphController", ['$scope', '$routeParams', '$location'
       $scope.history = History.push(queryBuffer);
       $scope.currentIndex = -1;
       Spinner.stopSpinner();
+      Notification.clear();
       $timeout(function () {
         GraphService.query($scope.database, $scope.currentUser, $scope.queryText);
         GraphService.add($scope.database, $scope.currentUser,
           data.graph
-        )
-        ;
+        );
       }, 1000);
     }).catch(function (err) {
       Spinner.stopSpinner();
@@ -1162,8 +1339,20 @@ GraphModule.controller("GraphController", ['$scope', '$routeParams', '$location'
   }
 
 
-}])
-;
+}]);
+
+GraphModule.controller('ModalEdgeEditController', ['$scope', '$controller', 'Database', function ($scope, $controller, Database) {
+
+  $controller('DocumentModalController', {$scope: $scope});
+
+
+  $scope.onReload = function () {
+    $scope.headers = $scope.headers = Database.getPropertyFromDoc($scope.doc, true).filter((c) => {
+      return c != "in" && c != "out";
+    });
+  }
+
+}]);
 GraphModule.controller("VertexAsideController", ['$scope', '$routeParams', '$location', 'Database', 'CommandApi', 'Spinner', 'Aside', 'Icon', '$rootScope', function ($scope, $routeParams, $location, Database, CommandApi, Spinner, Aside, Icon, $rootScope) {
 
 
@@ -1175,7 +1364,7 @@ GraphModule.controller("VertexAsideController", ['$scope', '$routeParams', '$loc
     $scope.icons = data;
 
 
-    $scope.headers = Database.getPropertyFromDoc($scope.doc);
+    $scope.headers = Database.getPropertyFromDoc($scope.doc, true);
     $scope.headers.unshift("@class");
     $scope.headers.unshift("@rid");
     $scope.active = 'properties';
@@ -1190,6 +1379,12 @@ GraphModule.controller("VertexAsideController", ['$scope', '$routeParams', '$loc
     $scope.$watch('config.display', function (val) {
       if (val) {
         $scope.graph.changeClazzConfig($scope.doc['@class'], 'display', val);
+      }
+    })
+
+    $scope.$watch('config.displayExpression', function (val) {
+      if (val != undefined) {
+        $scope.graph.changeClazzConfig($scope.doc['@class'], 'displayExpression', val);
       }
     })
 
@@ -1280,7 +1475,7 @@ GraphModule.controller("EdgeAsideController", ['$scope', '$routeParams', '$locat
   $scope.active = 'properties';
   if ($scope.doc) {
 
-    $scope.headers = Database.getPropertyFromDoc($scope.doc);
+    $scope.headers = Database.getPropertyFromDoc($scope.doc, true);
     $scope.headers.unshift("@class");
     $scope.headers.unshift("@rid");
     $scope.active = 'properties';
@@ -1296,6 +1491,12 @@ GraphModule.controller("EdgeAsideController", ['$scope', '$routeParams', '$locat
     $scope.$watch('config.icon', function (val) {
       if (val) {
         $scope.graph.changeClazzConfig($scope.doc['@class'], 'icon', val);
+      }
+    })
+
+    $scope.$watch('config.displayExpression', function (val) {
+      if (val != undefined) {
+        $scope.graph.changeClazzConfig($scope.doc['@class'], 'displayExpression', val);
       }
     })
     $scope.$watch('config.fill', function (val) {

@@ -43,7 +43,8 @@ import '../views/server/stats/auditing/log.html';
 import '../views/server/stats/auditing/config.html';
 import '../views/server/stats/auditing/newClass.html';
 import '../views/database/auditing/newClass.html';
-import '../views/server/stats/teleporter.html';
+import '../views/server/stats/importersManager.html';
+import '../views/server/stats/etl.html';
 import '../views/server/stats/events.html';
 import '../views/server/plugins/generic.html';
 import '../views/server/plugins/automaticBackup.html';
@@ -843,6 +844,7 @@ ee.controller("AuditingController", ['$scope', 'Auditing', 'Cluster', 'Spinner',
   $scope.saveAuditing = function () {
 
 
+
     SecurityService.reload({"module": "auditing", "config": $scope.auditingCfg})
       .then(function () {
         return $scope.save();
@@ -887,6 +889,9 @@ ee.controller("AuditingController", ['$scope', 'Auditing', 'Cluster', 'Spinner',
       }
       if ($scope.enabled) {
         Auditing.getConfig({db: $scope.db}).then(function (data) {
+
+
+
 
           $scope.config = data;
 
@@ -1227,9 +1232,8 @@ ee.controller('EEDashboardController', ["$scope", "$rootScope", "$routeParams", 
     {name: "backup", title: "Backup Management", template: 'backup', icon: 'fa-clock-o'},
     {name: "profiler", title: "Query Profiler", template: 'profiler', icon: 'fa-rocket'},
     {name: "security", title: "Security", template: 'security', icon: 'fa-lock'},
-    {name: "teleporter", title: "Teleporter", template: 'teleporter', icon: 'fa-usb'},
-    {name: "alerts", title: "Alerts Management", template: 'events', icon: 'fa-bell'}
-
+    {name: "alerts", title: "Alerts Management", template: 'events', icon: 'fa-bell'},
+    {name: "importers", title: "Importer", template: 'importersManager', icon: 'fa-plug'}
   ]
 
 
@@ -1340,7 +1344,7 @@ ee.controller('ClusterSingleDBController', ["$scope", "$rootScope", "$modal", "$
     "configuration": Database.getOWikiFor("Distributed-Configuration.html#default-distributed-db-configjson")
   }
 
-  $scope.roles = ["master", "replica"];
+  $scope.roles = ["MASTER", "REPLICA"];
 
 
   $scope.constantQuorum = ['majority', 'all'];
@@ -1422,14 +1426,16 @@ ee.controller('ClusterSingleDBController', ["$scope", "$rootScope", "$modal", "$
 
 
       $scope.calculatedRoles = {};
+
       if ($scope.config.servers) {
+
         Object.keys($scope.config.servers).forEach(function (k) {
           if (k === "*") {
             servers.forEach(function (s) {
-              $scope.calculatedRoles[s.name] = $scope.config.servers[k];
+              $scope.calculatedRoles[s.name] = $scope.config.servers[k].toUpperCase();
             });
           } else {
-            $scope.calculatedRoles[k] = $scope.config.servers[k];
+            $scope.calculatedRoles[k] = $scope.config.servers[k].toUpperCase();
           }
         })
       }
@@ -2164,7 +2170,7 @@ ee.controller("BackupConfigController", ["$scope", "AgentService", "$rootScope",
 /**
  *  Single Backup Controller
  */
-ee.controller("SingleBackupController", ["$scope", "BackupService", "Notification", "$modal", function ($scope, BackupService, Notification, $modal) {
+ee.controller("SingleBackupController", ["$scope", "BackupService", "Notification", "$modal","DatabaseApi", function ($scope, BackupService, Notification, $modal,DatabaseApi) {
 
   $scope.eventsType = [
     {name: "Backup Finished", type: "BACKUP_FINISHED", clazz: 'log-finished-icon'},
@@ -2228,7 +2234,7 @@ ee.controller("SingleBackupController", ["$scope", "BackupService", "Notificatio
     return logs.filter(function (e) {
       return $scope.selectedEvents.indexOf(e.op) != -1;
     }).map(function (e, idx, arr) {
-      var date = new Date(e.timestamp);
+      var date = new Date(e.timestampUnix);
       return {
         id: idx,
         title: $scope.info(e),
@@ -2277,7 +2283,6 @@ ee.controller("SingleBackupController", ["$scope", "BackupService", "Notificatio
       BackupService.logs($scope.backup.uuid, {from: $scope.from, to: $scope.to}).then(function (data) {
         $scope.logs = data.logs;
         $scope.currentUnitLogs = data.logs;
-
         $scope.refreshEvents();
       })
     }
