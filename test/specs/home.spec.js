@@ -69,10 +69,38 @@ describe("HomePage", function () {
     var inputUser = browser.getHTML('.noty_text', false);
 
     var message = 'The command has not been executed';
-    // var message = `com.orientechnologies.orient.core.exception.OSecurityAccessException: User 'reader' does not have permission to execute the operation 'Create' against the resource: ResourceGeneric [name=CLASS, legacyName=database.class].V DB name="${config.defaultDB}"`
 
     expect(inputUser).to.equal(message);
 
+  });
+
+
+  it("It should login with root/root to the default database and op succeed", function (done) {
+    browser.url("/")
+      .waitForExist(".ologin", true);
+
+    browser.setValue('#user', "root")
+      .setValue('#password', "root")
+      .click("#database-connect")
+      .waitForExist(".browse-container", true);
+
+
+    var query = "insert into v set name = 'Test'";
+
+    browser.execute(function () {
+
+      var query = "insert into v set name = 'Test'";
+      var codemirror = document.querySelector('.CodeMirror').CodeMirror;
+      codemirror.setValue(query);
+    });
+
+    browser.click("#button-run")
+      .waitForVisible('.query-container');
+
+
+    var innerQuery = browser.getHTML(".query-container .query-header h5 a", false);
+
+    expect(innerQuery).to.equal(query);
   });
 
 });
