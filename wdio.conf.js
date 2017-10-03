@@ -58,7 +58,7 @@ exports.config = {
   sync: true,
   //
   // Level of logging verbosity: silent | verbose | command | data | result | error
-  logLevel: 'silent',
+  logLevel: 'error',
   //
   // Enables colors for log output.
   coloredLogs: true,
@@ -73,9 +73,10 @@ exports.config = {
   // Set a base URL in order to shorten url command calls. If your url parameter starts
   // with "/", then the base url gets prepended.
   baseUrl: 'http://localhost:2480/studio/index.html',
+  // baseUrl: 'http://localhost:8080',
   //
   // Default timeout for all waitFor* commands.
-  waitforTimeout: 10000,
+  waitforTimeout: 5000,
   //
   // Default timeout in milliseconds for request
   // if Selenium Grid doesn't send response
@@ -121,6 +122,10 @@ exports.config = {
   // see also: http://webdriver.io/guide/testrunner/reporters.html
   reporters: ['spec'],
 
+  phantomjsOpts: {
+    webdriverLogfile: 'phantomjs.log',
+    ignoreSslErrors: true
+  },
   //
   // Options to be passed to Mocha.
   // See the full list at http://mochajs.org/
@@ -164,6 +169,7 @@ exports.config = {
     var chai = require('chai');
     global.expect = chai.expect;
     chai.Should();
+    browser.windowHandleSize({width: 1600, height: 768});
   }
   /**
    * Hook that gets executed before the suite starts

@@ -1,3 +1,6 @@
+'use strict';
+var config = require('./config');
+
 describe("HomePage", function () {
 
 
@@ -21,11 +24,83 @@ describe("HomePage", function () {
   it("It should login to the default database", function (done) {
     browser.url("/")
       .waitForExist(".ologin", true);
-    
+
     browser.setValue('#user', "admin")
       .setValue('#password', "admin")
       .click("#database-connect")
       .waitForExist(".browse-container", true);
+  });
+
+  it("It should login to the default database and then logout", function (done) {
+    browser.url("/")
+      .waitForExist(".ologin", true);
+
+    browser.setValue('#user', "admin")
+      .setValue('#password', "admin")
+      .click("#database-connect")
+      .waitForExist(".browse-container", true);
+
+    browser.waitForVisible("#user-dropdown", true);
+    browser.click("#user-dropdown")
+      .waitForVisible("#logout-button", true);
+
+    browser.click("#logout-button")
+      .waitForVisible(".ologin");
+  });
+
+  it("It should login with reader/reader to the default database and op fail", function (done) {
+    browser.url("/")
+      .waitForExist(".ologin", true);
+
+    browser.setValue('#user', "reader")
+      .setValue('#password', "reader")
+      .click("#database-connect")
+      .waitForExist(".browse-container", true);
+
+
+    browser.execute(function () {
+      var codemirror = document.querySelector('.CodeMirror').CodeMirror;
+      codemirror.setValue("insert into v set name = 'Test'");
+    });
+
+    browser.click("#button-run")
+      .waitForVisible('.noty_text');
+
+    var inputUser = browser.getHTML('.noty_text', false);
+
+    var message = 'The command has not been executed';
+
+    expect(inputUser).to.equal(message);
+
+  });
+
+
+  it("It should login with root/root to the default database and op succeed", function (done) {
+    browser.url("/")
+      .waitForExist(".ologin", true);
+
+    browser.setValue('#user', "root")
+      .setValue('#password', "root")
+      .click("#database-connect")
+      .waitForExist(".browse-container", true);
+
+
+    var query = "insert into v set name = 'Test'";
+
+    browser.execute(function () {
+
+      var query = "insert into v set name = 'Test'";
+      var codemirror = document.querySelector('.CodeMirror').CodeMirror;
+      codemirror.setValue(query);
+    });
+
+    browser.click("#button-run")
+      .waitForVisible('.query-container');
+
+
+    var innerQuery = browser.getHTML(".query-container .query-header h5 a", false);
+
+    expect(innerQuery).to.equal(query);
   });
 
 });
