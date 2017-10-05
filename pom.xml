@@ -155,12 +155,12 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.4.0</version>
         <executions>
-          <!--<execution>-->
-            <!--<phase>generate-resources</phase>-->
-            <!--<goals>-->
-              <!--<goal>exec</goal>-->
-            <!--</goals>-->
-          <!--</execution>-->
+          <execution>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>
 
           <!--<execution>-->
             <!--<id>Run OrientB</id>-->
