@@ -145,7 +145,7 @@ describe("HomePage", function () {
     browser.setValue('#serverUser', "root")
       .setValue('#serverPassword', "root")
       .click(`#cloud-database-${config.cloudDB}`)
-      .waitForVisible('.noty_text');
+      .waitForVisible('.noty_text',10000);
 
     var inputUser = browser.getHTML('.noty_text', false);
 
