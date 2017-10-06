@@ -1,3 +1,4 @@
 module.exports = {
-  defaultDB: "GratefulDeadConcerts"
+  defaultDB: "GratefulDeadConcerts",
+  cloudDB : "Whisky"
 }
