@@ -4705,13 +4705,12 @@ select2@^4.0.5:
     almond "~0.3.1"
     jquery-mousewheel "~3.1.13"
 
-selenium-standalone@6.8.0:
-  version "6.8.0"
-  resolved "https://registry.yarnpkg.com/selenium-standalone/-/selenium-standalone-6.8.0.tgz#b76cb3f0045c0cc225632dca6e0a8b9807c3d3be"
+selenium-standalone@6.4.0:
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/selenium-standalone/-/selenium-standalone-6.4.0.tgz#5824cc70dc08823753dc623e977fd528b650e7a4"
   dependencies:
     async "^2.1.4"
     commander "^2.9.0"
-    cross-spawn "^5.1.0"
     debug "^2.6.3"
     lodash "^4.17.4"
     minimist "^1.2.0"
