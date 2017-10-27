@@ -126,6 +126,7 @@ exports.config = {
     webdriverLogfile: 'phantomjs.log',
     ignoreSslErrors: true
   },
+  seleniumLogs : 'selenium.log',
   //
   // Options to be passed to Mocha.
   // See the full list at http://mochajs.org/
