@@ -28,7 +28,7 @@ let SchemaClassesController = function ($scope, $element, $attrs, $location, $mo
     angular.element(elem).val(ctrl.queryFilter).triggerHandler('input');
   }
 
-  ctrl.clusterStrategies = ['round-robin', "default", "balanced", "local"];
+  ctrl.clusterStrategies = Database.getClusterSelection();
 
   ctrl.links = {
     linkClasses: Database.getOWikiFor("Schema.html#class"),
