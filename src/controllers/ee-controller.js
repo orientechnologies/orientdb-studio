@@ -56,6 +56,8 @@ import '../views/server/distributed/events/logwhen.html';
 import '../views/server/distributed/events/metricwhen.html';
 
 import {POLLING} from '../constants';
+import Utilities from '../util/library'
+
 
 import EEServices from '../services/ee-services';
 import angular from 'angular';
