@@ -2,6 +2,7 @@ import {downgradeInjectable} from '@angular/upgrade/static';
 import {Http} from '@angular/http';
 import 'rxjs/add/operator/toPromise';
 
+import { Headers } from "@angular/http";
 import {API} from '../../../constants';
 import {Injectable} from "@angular/core";
 declare var angular:any
@@ -28,7 +29,7 @@ class ProfilerService {
 
   metadata() {
     let url = API + 'profiler/metadata';
-    return this.http.get(url).toPromise().then((data) => {
+    return this.http.get(url,this.getOptions()).toPromise().then((data) => {
       return data.json();
     });
   }
@@ -39,7 +40,18 @@ class ProfilerService {
       return data.json();
     });
   }
+
+  getOptions() {
+    let headers = new Headers({
+      'Authorization': localStorage.getItem("SimpleAuth")
+    });
+    return {
+      headers: headers
+    }
+  }
 }
+
+
 
 angular.module('command.services', []).factory(
   `ProfilerService`,
