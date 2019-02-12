@@ -8,7 +8,7 @@
 
   <groupId>com.orientechnologies</groupId>
   <artifactId>orientdb-studio</artifactId>
-  <version>3.0.15-SNAPSHOT</version>
+  <version>3.0.15</version>
 
   <name>OrientDB Studio</name>
   <description>OrientDB Studio - web interface for OrientDB server</description>
