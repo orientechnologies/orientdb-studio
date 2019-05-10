@@ -273,7 +273,6 @@
             <configuration>
                <gpgArguments>
                 	<arg>--pinentry-mode</arg>
-                    <arg>loopback</arg>
                     <arg>--batch</arg>
                </gpgArguments>
             </configuration>
