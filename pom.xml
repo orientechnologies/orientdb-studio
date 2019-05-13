@@ -272,8 +272,8 @@
             <version>1.6</version>
             <configuration>
                <gpgArguments>
-                	<arg>--no-tty</arg>
-                  <arg>--batch</arg>
+                	<arg>--pinentry-mode</arg>
+                  <arg>loopback</arg>
                   <arg>-vv</arg>
                </gpgArguments>
             </configuration>
