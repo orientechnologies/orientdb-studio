@@ -26,7 +26,7 @@ node {
 
 
                 withMaven(globalMavenSettingsFilePath: 'settings.xml') {
-                    sh "cd orientdb-studio && mvn clean install -DskipTests"
+                    sh "cd orientdb-studio && mvn clean deploy -DskipTests"
                 }
             }catch(e){
                 slackSend(color: '#FF0000', channel: '#jenkins-failures', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})\n${e}")
