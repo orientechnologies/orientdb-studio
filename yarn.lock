@@ -266,9 +266,9 @@ angular2-template-loader@^0.6.2:
   dependencies:
     loader-utils "^0.2.15"
 
-angular@1.5.9, "angular@>=1.2.26 <=1.6", angular@>=1.4.0, angular@^1.2.8:
-  version "1.5.9"
-  resolved "https://registry.yarnpkg.com/angular/-/angular-1.5.9.tgz#b7aeff42dad87881e06be16b6690fe766d868b51"
+angular@1.6.0, "angular@>=1.2.26 <=1.6", angular@>=1.4.0, angular@^1.2.8:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/angular/-/angular-1.6.0.tgz#16c5edebd0a342046bd5281cca2decf04c40df76"
 
 ansi-html@0.0.7:
   version "0.0.7"

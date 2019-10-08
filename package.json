@@ -14,7 +14,7 @@
     "@angularclass/hmr-loader": "^3.0.4",
     "@types/codemirror": "0.0.60",
     "@types/filesize": "^3.6.0",
-    "angular": "1.5.9",
+    "angular": "1.6.0",
     "angular-animate": "1.5.9",
     "angular-bootstrap-switch": "^0.5.2",
     "angular-local-storage": "^0.2.7",
