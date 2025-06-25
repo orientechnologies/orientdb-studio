@@ -55,23 +55,18 @@
     </developer>
   </developers>
   <distributionManagement>
-    <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>OrientDB Maven2 Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-    </repository>
     <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>OrientDB Maven2 Snapshot Repository</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <id>central</id>
+      <name>Central Portal Snapshots</name>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
       <uniqueVersion>false</uniqueVersion>
     </snapshotRepository>
   </distributionManagement>
   <repositories>
     <repository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <id>central</id>
+      <name>Central Portal Snapshots</name>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -263,7 +258,16 @@
             <localCheckout>true</localCheckout>
         </configuration>
       </plugin>
-    </plugins>
+      <plugin>
+          <groupId>org.sonatype.central</groupId>
+          <artifactId>central-publishing-maven-plugin</artifactId>
+          <version>0.8.0</version>
+          <extensions>true</extensions>
+          <configuration>
+              <publishingServerId>central</publishingServerId>
+          </configuration>
+      </plugin>
+  </plugins>
   </build>
   <profiles>
     <profile>
