@@ -3,6 +3,8 @@
 
 name: Publish Snapshot
 on:
+  push:
+    branches: [ 3.2.x ]
   workflow_dispatch:
 
 jobs:
