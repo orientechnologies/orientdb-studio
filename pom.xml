@@ -144,7 +144,21 @@
             </goals>
           </execution>
           <execution>
-            <id>Install Deps and Dist</id>
+            <id>Install Deps</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>yarn</executable>
+              <arguments>
+                <argument>install</argument>
+              </arguments>
+              <workingDirectory>.</workingDirectory>
+            </configuration>
+          </execution>
+          <execution>
+            <id>Run Dist</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>exec</goal>
